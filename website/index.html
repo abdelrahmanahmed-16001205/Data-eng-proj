@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An exploratory dashboard about NYC affordable housing records and parking meter locations.">
+  <title>NYC Housing & Curbside | Data Project</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">NYC OPEN DATA · EXPLORATORY ANALYSIS</p>
+      <h1>Affordable housing<br><em>&amp; curbside access</em></h1>
+      <p class="intro">How do affordable housing records and parking meter locations overlap across New York City? Explore twelve descriptive questions using a geographic proximity window.</p>
+      <div class="hero-meta"><span>5 boroughs</span><span>12 research questions</span><span>Descriptive, not causal</span></div>
+    </div>
+  </header>
+  <main>
+    <div class="section-kicker"><span>01 / FILTER THE CITY</span><span>Choose filters, then generate a synchronized report</span></div>
+    <section class="controls panel">
+      <div><label for="borough">Borough</label><select id="borough"><option value="ALL">All boroughs</option><option>BRONX</option><option>BROOKLYN</option><option>MANHATTAN</option><option>QUEENS</option><option>STATEN ISLAND</option></select></div>
+      <div><label for="year">Completion year</label><select id="year"><option value="ALL">All years</option></select></div>
+      <div><label for="construction">Construction type</label><select id="construction"><option value="ALL">All types</option><option>New Construction</option><option>Preservation</option></select></div>
+      <div><label for="status">Meter status</label><select id="status"><option value="ALL">All statuses</option><option>ACTIVE</option><option>INACTIVE</option><option>UNKNOWN</option></select></div>
+      <div class="search-control"><label for="search">Search (e.g. Brooklyn 2022 new buildings)</label><input id="search" type="search" placeholder="Type a place, year, or category"><small>Search recognizes borough, year, construction type, and meter status.</small></div>
+      <button id="generate" type="button">Generate report <span aria-hidden="true">→</span></button>
+      <p id="load-status" role="status">Loading project data…</p>
+    </section>
+    <section id="report-summary" class="report-summary" aria-live="polite"></section>
+    <div class="section-kicker"><span>02 / CITY FINDINGS</span><span>12 linked views of the integrated dataset</span></div>
+    <section id="charts-grid" class="charts-grid" aria-live="polite"></section>
+    <section class="panel insight-panel"><p class="eyebrow">HOW TO READ THIS STORY</p><h2>A geographic association, not a cause</h2><p>The project links housing records and meter locations using a square-grid proximity window because the datasets do not share a direct identifier. Results can identify patterns for further study, but cannot show that meters cause housing development or that housing changes meter availability.</p><div class="caveat"><strong>Limits of the data</strong><p>The housing file is a current dataset of project/building records; a row is not necessarily a unique physical building. Meter locations and status are a current snapshot, not historical records for each completion date. A meter is not the same as a parking space, and the grid is not walking distance. Missing coordinates cannot be assigned a reliable proximity count.</p></div></section>
+    <section class="panel project-note"><div><p class="eyebrow">THE DATA STORY</p><h2>Two city systems, one map</h2></div><div><p>In the notebook's recorded run, 75.7% of housing records with usable coordinates had at least one active meter in the selected grid window; 77.2% of meter records with usable coordinates had a housing record nearby. The overlap varied by borough and by the size of the proximity window, so these figures describe the chosen method and data snapshot.</p><p class="impact"><strong>Why it matters:</strong> planners and housing advocates can use this as an initial screening view to identify neighborhoods for closer study. Before making policy decisions, they would need historical meter data, parking occupancy, transit access, and a more direct measure of access.</p></div></section>
+  </main>
+  <footer><span>GIU · Data Engineering Final Project</span><span>Source data: NYC Open Data · See README for dataset IDs and field notes</span></footer>
+  <script src="app-final.js"></script>
+</body>
+</html>
