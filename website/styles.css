@@ -534,7 +534,10 @@ main { padding-bottom: 56px; }
   transition: opacity 140ms var(--ease-out);
 }
 
-.charts-grid.is-swapping { opacity: .55; }
+/* Applied while the grid is rebuilt: the new charts start dimmed, and removing
+   the class hands them to the transition above. No transition while the class
+   is on, or the grid would fade down before the swap instead of after it. */
+.charts-grid.is-swapping { opacity: .55; transition: none; }
 
 .chart-panel {
   padding: 18px;
@@ -1201,8 +1204,8 @@ footer {
   .btn-ghost:active,
   .theme-toggle:active { transform: none; }
 
-  .charts-grid { transition: none; }
-  .charts-grid.is-swapping { opacity: 1; }
+  /* The chart fade is a brightness change, not movement, so it stays: the
+     charts still arrive dimmed and lift to full opacity. */
 
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none !important; }

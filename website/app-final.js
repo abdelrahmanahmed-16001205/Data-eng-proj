@@ -747,7 +747,11 @@ function render() {
   $('#report-summary').innerHTML = summaryHtml(h, m);
   $('#load-status').textContent = 'Report generated from the integrated CSV exports.';
 
-  requestAnimationFrame(() => requestAnimationFrame(() => grid.classList.remove('is-swapping')));
+  /* Commit the dimmed state, then release it so the base transition carries the
+     new charts up to full opacity. Without this reflow the browser never paints
+     the .55 state, and the fade is cancelled before it starts. */
+  void grid.offsetWidth;
+  grid.classList.remove('is-swapping');
 
   syncScrollers();
   watchPanels();

@@ -57,7 +57,7 @@ The notebook renders the same questions as Plotly figures, including line and bo
 
 ### Accessibility and print
 
-The dashboard is built for keyboard use (skip link, visible focus, chart containers that become focusable only when they scroll sideways), keeps text at WCAG 2.2 AA contrast in both themes, and respects `prefers-reduced-motion` by keeping colour changes while dropping movement. Charts carry text labels and accessible descriptions, and every chart's numbers are also available as a table, so nothing depends on colour or on reading an SVG. Printing forces the light palette and hides the interactive chrome.
+The dashboard is built for keyboard use (skip link, visible focus, chart containers that become focusable only when they scroll sideways), keeps text at WCAG 2.2 AA contrast in both themes, and respects `prefers-reduced-motion` by dropping movement — transforms and the theme reveal — while keeping colour and the chart fade, which is a brightness change rather than motion. Charts carry text labels and accessible descriptions, and every chart's numbers are also available as a table, so nothing depends on colour or on reading an SVG. Printing forces the light palette and hides the interactive chrome.
 
 ## Analysis method and interpretation
 
