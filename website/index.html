@@ -1,39 +1,221 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="An exploratory dashboard about NYC affordable housing records and parking meter locations.">
-  <title>NYC Housing & Curbside | Data Project</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NYC Housing &amp; Curbside — affordable housing and parking meters</title>
+<meta name="description" content="An exploratory dashboard linking 9,551 NYC affordable housing records to 15,592 parking meter locations through a 7×7 grid proximity window.">
+<meta name="author" content="GIU Data Engineering and Visualization, Winter 2026">
+<link rel="canonical" href="https://abdelrahmanahmed-16001205.github.io/Data-eng-proj/website/">
+
+<meta name="theme-color" content="#f2f4f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1416" media="(prefers-color-scheme: dark)">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="NYC Housing &amp; Curbside">
+<meta property="og:title" content="Affordable housing and curbside access in New York City">
+<meta property="og:description" content="75.7% of affordable housing records with usable coordinates have an active parking meter within a 7×7 grid window. Explore twelve views of the overlap.">
+<meta property="og:url" content="https://abdelrahmanahmed-16001205.github.io/Data-eng-proj/website/">
+<meta property="og:image" content="https://abdelrahmanahmed-16001205.github.io/Data-eng-proj/website/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A green regulation-style sign reading 75.7 percent, beside the title Affordable housing and curbside access.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Affordable housing and curbside access in New York City">
+<meta name="twitter:description" content="Twelve views of the overlap between NYC affordable housing records and parking meter locations.">
+<meta name="twitter:image" content="https://abdelrahmanahmed-16001205.github.io/Data-eng-proj/website/og.png">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='3' fill='%230a6b3d'/%3E%3Cpath d='M11 25V8h6.4a5.6 5.6 0 0 1 0 11.2H11' fill='none' stroke='%23fff' stroke-width='3.6' stroke-linecap='square'/%3E%3C/svg%3E">
+
+<script>
+/* Set the theme before first paint so there is no flash of the wrong palette. */
+(function () {
+  try {
+    var stored = localStorage.getItem('nyc-theme');
+    var theme = stored === 'light' || stored === 'dark'
+      ? stored
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+  } catch (e) { /* storage blocked: keep the light default */ }
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-inner">
-      <p class="eyebrow">NYC OPEN DATA · EXPLORATORY ANALYSIS</p>
-      <h1>Affordable housing<br><em>&amp; curbside access</em></h1>
-      <p class="intro">How do affordable housing records and parking meter locations overlap across New York City? Explore twelve descriptive questions using a geographic proximity window.</p>
-      <div class="hero-meta"><span>5 boroughs</span><span>12 research questions</span><span>Descriptive, not causal</span></div>
+<a class="skip-link" href="#main">Skip to the filters and charts</a>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <p class="hero-source">NYC Open Data · HPD affordable housing · DOT parking meters</p>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme">
+        <svg class="icon-moon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><path d="M21 12.9A9.1 9.1 0 1 1 11.1 3a7.1 7.1 0 0 0 9.9 9.9Z" fill="currentColor"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.3" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.9v3M12 19.1v3M1.9 12h3M19.1 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></g></svg>
+        <span aria-hidden="true">Dark</span>
+      </button>
     </div>
-  </header>
-  <main>
-    <div class="section-kicker"><span>01 / FILTER THE CITY</span><span>Choose filters, then generate a synchronized report</span></div>
-    <section class="controls panel">
-      <div><label for="borough">Borough</label><select id="borough"><option value="ALL">All boroughs</option><option>BRONX</option><option>BROOKLYN</option><option>MANHATTAN</option><option>QUEENS</option><option>STATEN ISLAND</option></select></div>
-      <div><label for="year">Completion year</label><select id="year"><option value="ALL">All years</option></select></div>
-      <div><label for="construction">Construction type</label><select id="construction"><option value="ALL">All types</option><option>New Construction</option><option>Preservation</option></select></div>
-      <div><label for="status">Meter status</label><select id="status"><option value="ALL">All statuses</option><option>ACTIVE</option><option>INACTIVE</option><option>UNKNOWN</option></select></div>
-      <div class="search-control"><label for="search">Search (e.g. Brooklyn 2022 new buildings)</label><input id="search" type="search" placeholder="Type a place, year, or category"><small>Search recognizes borough, year, construction type, and meter status.</small></div>
-      <button id="generate" type="button">Generate report <span aria-hidden="true">→</span></button>
-      <p id="load-status" role="status">Loading project data…</p>
-    </section>
-    <section id="report-summary" class="report-summary" aria-live="polite"></section>
-    <div class="section-kicker"><span>02 / CITY FINDINGS</span><span>12 linked views of the integrated dataset</span></div>
-    <section id="charts-grid" class="charts-grid" aria-live="polite"></section>
-    <section class="panel insight-panel"><p class="eyebrow">HOW TO READ THIS STORY</p><h2>A geographic association, not a cause</h2><p>The project links housing records and meter locations using a square-grid proximity window because the datasets do not share a direct identifier. Results can identify patterns for further study, but cannot show that meters cause housing development or that housing changes meter availability.</p><div class="caveat"><strong>Limits of the data</strong><p>The housing file is a current dataset of project/building records; a row is not necessarily a unique physical building. Meter locations and status are a current snapshot, not historical records for each completion date. A meter is not the same as a parking space, and the grid is not walking distance. Missing coordinates cannot be assigned a reliable proximity count.</p></div></section>
-    <section class="panel project-note"><div><p class="eyebrow">THE DATA STORY</p><h2>Two city systems, one map</h2></div><div><p>In the notebook's recorded run, 75.7% of housing records with usable coordinates had at least one active meter in the selected grid window; 77.2% of meter records with usable coordinates had a housing record nearby. The overlap varied by borough and by the size of the proximity window, so these figures describe the chosen method and data snapshot.</p><p class="impact"><strong>Why it matters:</strong> planners and housing advocates can use this as an initial screening view to identify neighborhoods for closer study. Before making policy decisions, they would need historical meter data, parking occupancy, transit access, and a more direct measure of access.</p></div></section>
-  </main>
-  <footer><span>GIU · Data Engineering Final Project</span><span>Source data: NYC Open Data · See README for dataset IDs and field notes</span></footer>
-  <script src="app-final.js"></script>
+
+    <h1>Affordable housing<br>&amp; curbside access</h1>
+
+    <div class="hero-body">
+      <div class="hero-sign">
+        <p class="sign-num">75.7%</p>
+        <p class="sign-label">of housing records with usable coordinates have an active parking meter within a 7&thinsp;×&thinsp;7 grid window — roughly 300 to 400 metres</p>
+      </div>
+      <div class="hero-copy">
+        <p class="lede">The supply behind that figure is uneven: 81 meters per 1,000 affordable units in Queens, 13 in the Bronx.</p>
+        <p class="lede-sub">A descriptive join of two New York City datasets that share no key, no address field and no common date.</p>
+      </div>
+    </div>
+
+    <dl class="stats">
+      <div><dt>Housing records</dt><dd>9,551</dd></div>
+      <div><dt>Meter records</dt><dd>15,592</dd></div>
+      <div><dt>Meters per 1,000 units</dt><dd>81&thinsp;:&thinsp;13</dd></div>
+      <div><dt>Matched to a meter</dt><dd>75.7%</dd></div>
+    </dl>
+  </div>
+</header>
+
+<main id="main" tabindex="-1">
+  <noscript><p class="empty">This dashboard draws its twelve charts in the browser. Enable JavaScript to use the filters and see the views.</p></noscript>
+
+  <h2 class="section-bar" id="filters"><span class="bar-num">01</span> Filter the city</h2>
+  <section class="controls panel" aria-labelledby="filters">
+    <div class="control-field"><label for="borough">Borough</label><select id="borough"><option value="ALL">All boroughs</option><option>BRONX</option><option>BROOKLYN</option><option>MANHATTAN</option><option>QUEENS</option><option>STATEN ISLAND</option></select></div>
+    <div class="control-field"><label for="year">Completion year</label><select id="year"><option value="ALL">All years</option></select></div>
+    <div class="control-field"><label for="construction">Construction type</label><select id="construction"><option value="ALL">All types</option><option>New Construction</option><option>Preservation</option></select></div>
+    <div class="control-field"><label for="status">Meter status</label><select id="status"><option value="ALL">All statuses</option><option>ACTIVE</option><option>INACTIVE</option><option>UNKNOWN</option></select></div>
+
+    <div class="control-field search-control">
+      <label for="search">Search</label>
+      <input id="search" type="search" placeholder="Brooklyn 2022 new buildings" aria-describedby="search-hint">
+    </div>
+    <div class="control-actions">
+      <button id="generate" class="btn-primary" type="button">Generate report</button>
+      <button id="reset" class="btn-ghost" type="button">Reset</button>
+    </div>
+
+    <p id="search-hint">Recognises borough, year, construction type and meter status.</p>
+    <p id="stale-note" class="stale-note" hidden>Filters changed — generate a report to update the charts.</p>
+    <p id="load-status" class="load-status" role="status">Loading project data…</p>
+  </section>
+
+  <section id="report-summary" class="report-summary" aria-live="polite"></section>
+  <div class="report-actions">
+    <span class="report-actions-label">Export the filtered rows</span>
+    <button type="button" class="btn-ghost btn-small" id="download-housing">Housing CSV</button>
+    <button type="button" class="btn-ghost btn-small" id="download-meters">Meters CSV</button>
+    <button type="button" class="btn-ghost btn-small" id="copy-link">Copy link</button>
+    <span id="export-status" class="export-status" role="status"></span>
+  </div>
+
+  <h2 class="section-bar" id="views"><span class="bar-num">02</span> Twelve views</h2>
+  <p class="views-hint">On a narrow screen each chart scrolls sideways. Every chart also has a data table with the same numbers.</p>
+  <nav class="chart-index" id="chart-index" aria-label="Jump to a chart"></nav>
+  <section id="charts-grid" class="charts-grid"></section>
+
+  <h2 class="section-bar" id="method"><span class="bar-num">03</span> How the two datasets were joined</h2>
+  <section class="method panel" aria-labelledby="method">
+    <div class="method-grid">
+      <div class="method-copy">
+        <h3>No shared key, so the join is spatial</h3>
+        <p>The housing file lists affordable projects by building. The meter file lists parking meters by location. They share no record ID, no reliable address field and no common date: the meter file is a current snapshot with no history.</p>
+        <ol class="method-steps">
+          <li><strong>Index both files onto a grid.</strong> Cells are 0.0009° of latitude by 0.0012° of longitude — about 100 metres on a side at New York’s latitude.</li>
+          <li><strong>Count within a fixed window.</strong> Each housing record sums the active meters in the 7&thinsp;×&thinsp;7 block of cells centred on it. That puts the window’s edges roughly 300–400 metres away and its corners up to about 500 metres.</li>
+          <li><strong>Keep the missing values missing.</strong> Records without usable coordinates get no proximity value and are excluded from every share, rather than counted as “no meter nearby”.</li>
+        </ol>
+      </div>
+      <figure class="method-figure">
+        <div class="grid-diagram" aria-hidden="true">
+          <span class="cell-house"></span>
+          <span class="cell-meter" style="--x:1;--y:1"></span>
+          <span class="cell-meter" style="--x:4;--y:0"></span>
+          <span class="cell-meter" style="--x:2;--y:2"></span>
+          <span class="cell-meter" style="--x:5;--y:3"></span>
+          <span class="cell-meter" style="--x:0;--y:5"></span>
+          <span class="cell-meter" style="--x:4;--y:5"></span>
+          <span class="cell-meter" style="--x:6;--y:2"></span>
+          <span class="cell-meter" style="--x:3;--y:6"></span>
+        </div>
+        <figcaption>One housing record, its 7&thinsp;×&thinsp;7 cell window, and the active meters counted inside it.</figcaption>
+      </figure>
+    </div>
+
+    <dl class="method-stats">
+      <div><dt>Window</dt><dd>7 × 7 cells</dd></div>
+      <div><dt>Edge distance</dt><dd>300–400 m</dd></div>
+      <div><dt>With coordinates</dt><dd>7,593 <span>of 9,551</span></dd></div>
+      <div><dt>Excluded, no coordinates</dt><dd>20.5%</dd></div>
+    </dl>
+
+    <div class="method-sensitivity">
+      <h4>The result depends on the window you choose</h4>
+      <p>Widening the window raises the share of housing records with an active meter nearby. The notebook records all three checks, which is why the dashboard states its window rather than presenting 75.7% as a property of the city.</p>
+      <ul class="sensitivity-list">
+        <li><span class="sens-value">63.9%</span><span class="sens-label">2-cell window</span></li>
+        <li class="is-current"><span class="sens-value">75.7%</span><span class="sens-label">3-cell window — used here</span></li>
+        <li><span class="sens-value">87.8%</span><span class="sens-label">5-cell window</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <h2 class="section-bar" id="story"><span class="bar-num">04</span> The story</h2>
+  <section class="story panel" aria-labelledby="story-title">
+    <h3 id="story-title">A geographic association, not a cause</h3>
+    <p class="story-lede">The project links housing records and meter locations with a square-grid proximity window because the two datasets share no direct identifier. The results can point to patterns worth a closer look; they cannot show that meters cause housing development, or that housing changes meter availability.</p>
+
+    <div class="story-block">
+      <h4>The question</h4>
+      <p>How do affordable housing records and parking meter locations overlap across New York City, and does that overlap differ by borough, completion year, construction type and meter status?</p>
+      <p>In the notebook’s recorded run, 75.7% of housing records with usable coordinates had at least one active meter in the selected 7&thinsp;×&thinsp;7 window, and 77.2% of meter records with usable coordinates had a housing record nearby. The overlap varied by borough and by the size of the proximity window, so these figures describe the chosen method and this data snapshot.</p>
+    </div>
+
+    <div class="story-block story-block--findings">
+      <h4>Key findings</h4>
+      <ul class="findings">
+        <li>Meter coverage is uneven across the city: Queens has 81 active meters per 1,000 affordable units and Manhattan 53, against 13 in the Bronx and 40 in Brooklyn &mdash; a six-fold spread from a single method.</li>
+        <li>The yearly share of housing records near an active meter rose from 66% in 2014 to 78&ndash;85% since 2020, with a dip to 54% in 2016.</li>
+        <li>New construction records sit slightly closer to meters than preservation records: a median of 9 nearby active meters against 7.</li>
+        <li>Community Board BK-05 has the most new affordable units in the data (10,744) and an average of 1 meter nearby; BX-01 has 6,842 units and 10.8 meters.</li>
+        <li>Meters near new affordable housing are slightly more likely to be inactive: 18.4% against 16.4% elsewhere.</li>
+        <li>The scatter views show only weak associations: record size against nearby meters r = 0.08, affordable-unit share r = &minus;0.16, three-bedroom share r = &minus;0.15.</li>
+        <li>Records without a meter nearby have a longer median project duration (628 days) than records with one (429 days), but 36% of duration values are zero because start and completion dates match, so this comparison is fragile.</li>
+      </ul>
+    </div>
+
+    <div class="story-block">
+      <h4>Limits</h4>
+      <p>The housing file is a current dataset of project and building records; a row is not necessarily a unique physical building. Meter locations and status are a current snapshot, not historical records for each completion date. A meter is not the same as a parking space, and the grid is not walking distance. Missing coordinates cannot be assigned a reliable proximity count, so those records are excluded from proximity shares rather than counted as unmetered.</p>
+    </div>
+
+    <div class="story-block impact-block">
+      <h4>Why it matters</h4>
+      <p>Planners and housing advocates can use this as an initial screening view to identify neighborhoods for closer study. Before making policy decisions, they would need historical meter data, parking occupancy, transit access, and a more direct measure of access.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-main">
+    <p><strong>GIU</strong> · Data Engineering and Visualization · Milestone 1 · Winter 2026</p>
+    <p>Snapshot: the integrated exports committed to the repository on 3 November 2026. Source: NYC Open Data —
+      <a href="https://data.cityofnewyork.us/Housing-Development/Affordable-Housing-Production-by-Building/hg8x-zxpr">HPD affordable housing <span class="mono">hg8x-zxpr</span></a> and
+      <a href="https://data.cityofnewyork.us/Transportation/Parking-Meters-Locations-and-Status/693u-uax6">DOT parking meters <span class="mono">693u-uax6</span></a>.</p>
+  </div>
+  <nav class="footer-links" aria-label="Project links">
+    <a href="https://github.com/abdelrahmanahmed-16001205/Data-eng-proj/blob/main/Milestone1_FINAL_SUBMISSION_REVIEWED.ipynb">Notebook</a>
+    <a href="https://github.com/abdelrahmanahmed-16001205/Data-eng-proj">Repository</a>
+    <a href="https://github.com/abdelrahmanahmed-16001205/Data-eng-proj/blob/main/README.md">README</a>
+  </nav>
+</footer>
+
+<script src="borough-paths.js"></script>
+<script src="app-final.js"></script>
 </body>
 </html>

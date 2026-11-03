@@ -1,0 +1,24 @@
+# Local agent tooling. Project-scoped skills and MCP config; not part of the
+# submitted project and not needed to run the notebook or the dashboard.
+.opencode/
+opencode.json
+
+# Local browser screenshots and session artifacts
+.openchamber/
+.playwright-cli/
+
+# Google Colab's default scratch folder (~56 MB of MNIST and California housing
+# samples). Nothing in the analysis reads it.
+sample_data/
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+~$*
