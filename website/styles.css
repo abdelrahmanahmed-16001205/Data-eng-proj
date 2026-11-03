@@ -993,6 +993,68 @@ main { padding-bottom: 56px; }
 .impact-block h4 { color: var(--impact-accent); }
 .impact-block p { color: var(--impact-text); max-width: 34em; text-wrap: pretty; }
 
+/* ---------- Team ---------- */
+
+.team {
+  padding: 28px;
+  border-top: 3px solid var(--rule);
+}
+
+.team h3 {
+  margin: 0;
+  font: 600 30px/1.15 var(--display);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.team-lede {
+  margin: 10px 0 0;
+  max-width: 34em;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--body);
+  text-wrap: pretty;
+}
+
+.team-list {
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 32px;
+}
+
+.team-list li {
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+}
+
+.team-name {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font: 600 16px/1.35 var(--sans);
+  color: var(--ink);
+}
+
+.team-id {
+  flex: none;
+  font: 400 12.5px/1 var(--mono);
+  letter-spacing: .02em;
+  color: var(--note);
+}
+
+.team-part {
+  margin: 5px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+  text-wrap: pretty;
+}
+
 /* Wide screens: the findings list sits beside the prose so the measure stays readable */
 @media (min-width: 1000px) {
   .story {
@@ -1221,6 +1283,9 @@ footer {
   .method h3 { font-size: 25px; }
   .story { padding: 22px; }
   .story h3 { font-size: 26px; }
+  .team { padding: 22px; }
+  .team h3 { font-size: 26px; }
+  .team-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   footer { flex-direction: column; gap: 12px; }
 }
 
@@ -1235,6 +1300,7 @@ footer {
   .method-stats dd { font-size: 21px; }
   .hero-top { flex-wrap: wrap; }
   .theme-toggle { margin-left: auto; }
+  .team-list { grid-template-columns: 1fr; gap: 14px; }
 }
 
 @media (max-width: 450px) {
@@ -1243,6 +1309,7 @@ footer {
   .sign-label { font-size: 13px; }
   .method { padding: 18px; }
   .story { padding: 18px; }
+  .team { padding: 18px; }
   .impact-block { padding: 18px; }
   .sensitivity-list li { min-width: 100%; }
 }

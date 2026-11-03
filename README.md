@@ -51,6 +51,7 @@ Open <http://localhost:8000/website/>. The server is required: opening `website/
 - A data table under every chart, filled on first open, holding the same numbers the chart draws.
 - CSV export of the filtered housing or meter rows, and **Copy link**, which puts the current filters in the URL so a view can be reopened or shared.
 - A method section that states the join definition (0.0009° × 0.0012° cells, a 7 × 7 window) and the sensitivity check that gives 63.9% / 75.7% / 87.8% for 2-, 3- and 5-cell windows.
+- A team section that lists each member with their student ID and the questions and pipeline work they owned.
 
 The notebook renders the same questions as Plotly figures, including line and box views. The website re-draws them with a small amount of hand-written SVG so the page needs neither a plotting library nor a build step. One deliberate difference: Q2 is a borough-by-completion-year heatmap on the site instead of the notebook's single line, because the yearly citywide line hides the borough differences the question is about. Cells with fewer than ten usable records are shown as a dash rather than a percentage, since a single record would move them by tens of points.
 
@@ -81,4 +82,4 @@ Housing and meter locations are linked using a square grid neighbourhood window 
 
 ## Submission
 
-The milestone brief asks for one team email containing all member IDs, the GitHub repository URL, the deployed site URL, and both dataset links. GitHub Pages serves the site from `main`, so the build described above is the deployed build.
+The milestone brief asks for one team email containing all member IDs, the GitHub repository URL, the deployed site URL, and both dataset links. GitHub Pages serves the site from `main`; the checks in `docs/audit-2026-11-03.md` were re-run against the deployed URL, not a local server.
