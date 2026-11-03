@@ -1,0 +1,6 @@
+# Notebook dependencies. Install with:  pip install -r requirements.txt
+# The dashboard in website/ has no dependencies and needs none of these.
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.9
+scipy>=1.11
