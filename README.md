@@ -1,11 +1,11 @@
 # NYC Affordable Housing & Parking Meters
 
-An exploratory data-engineering project that links two New York City open datasets — affordable housing
-production and on-street parking meters — through a grid-based proximity window. The two files share no
-record ID, no reliable address field and no common date, so the join is spatial rather than relational.
+An exploratory data-engineering project that links two New York City open datasets through a grid-based
+proximity window. The datasets are affordable housing production and on-street parking meters. They share
+no identifier, and their address fields and dates do not line up, so the join has to be spatial.
 
-The analysis is descriptive. It measures how often housing records and meter locations fall near each
-other; it does not show that meters cause housing, or that housing changes meter availability.
+The analysis is descriptive: it measures how often housing records and meter locations fall near each
+other. It cannot show that meters cause housing, or that housing changes meter availability.
 
 **Live dashboard:** <https://abdelrahmanahmed-16001205.github.io/Data-eng-proj/>
 **Repository:** <https://github.com/abdelrahmanahmed-16001205/Data-eng-proj>
@@ -21,9 +21,11 @@ on every run.
 
 ```powershell
 pip install -r requirements.txt
+pip install jupyterlab
 jupyter lab analysis.ipynb
 ```
 
+`requirements.txt` holds the analysis libraries; Jupyter is not in that file, so install it separately.
 Run all cells from top to bottom. The run rebuilds every figure, the association-statistics table and the
 five CSVs in `Data/`. Figures are saved as PNG outputs, so they render in Jupyter, VS Code, Colab and the
 GitHub preview without a plotting library or a CDN script.
@@ -36,7 +38,7 @@ From the project root:
 python -m http.server 8000
 ```
 
-Open <http://localhost:8000/website/>. A server is required — opening `website/index.html` directly from
+Open <http://localhost:8000/website/>. A server is required: opening `website/index.html` directly from
 the filesystem blocks the CSV requests. If `python` is not on `PATH`, use the installed executable.
 
 ---
@@ -45,7 +47,7 @@ the filesystem blocks the CSV requests. If `python` is not on `PATH`, use the in
 
 | Path | Contents |
 |---|---|
-| `analysis.ipynb` | The full analysis: loading, EDA, cleaning, integration, aggregation, twelve figures, association statistics, findings and limitations. |
+| `analysis.ipynb` | The full analysis: loading, EDA, cleaning, integration, aggregation, the twelve answer figures, association statistics, findings and limitations. |
 | `Data/` | Five CSV exports the dashboard reads. Must stay at the repository root. |
 | `website/` | The static dashboard: `index.html`, `styles.css`, `app.js`, `borough-paths.js`, `og.png`. No build step and no runtime dependencies. |
 | `index.html` | Redirects the repository root to `website/`. |
@@ -66,7 +68,7 @@ the filesystem blocks the CSV requests. If `python` is not on `PATH`, use the in
 | Affordable Housing Production by Building (HPD) | `hg8x-zxpr` | <https://data.cityofnewyork.us/Housing-Development/Affordable-Housing-Production-by-Building/hg8x-zxpr> |
 | Parking Meters Locations & Status (DOT) | `693u-uax6` | <https://data.cityofnewyork.us/Transportation/Parking-Meters-Locations-and-Status/693u-uax6> |
 
-No source file is committed. The snapshot in `Data/` was pulled on **5 November 2026** and holds 9,551
+No raw download is committed. The snapshot in `Data/` was pulled on **5 November 2026** and holds 9,551
 housing records (51 columns after cleaning) and 15,592 unique meters (21 columns). Both datasets are live
 and change without notice, so a later run produces slightly different counts; re-running the notebook
 refreshes `Data/` from whatever NYC Open Data serves at that moment.
@@ -77,7 +79,7 @@ refreshes `Data/` from whatever NYC Open Data serves at that moment.
 
 Both files carry coordinates, so proximity is measured on a grid of cells about 100 m per side
 (0.0009° latitude by 0.0012° longitude). For each record the notebook counts records of the other dataset
-in a 7 × 7 cell window around it. The window is square — not a radius and not a walking distance — and the
+in a 7 × 7 cell window around it. The window is square, not a radius or a walking distance, and the
 sensitivity check shows how much the result depends on it:
 
 | Window | Housing records near an active meter |
@@ -86,19 +88,21 @@ sensitivity check shows how much the result depends on it:
 | 3 cells (7 × 7) — used here | 75.7% |
 | 5 cells (11 × 11) | 87.8% |
 
-Records without usable coordinates (1,958 housing records, 20.5%) are excluded from proximity shares
-rather than counted as “no meter nearby”. A housing row is a dataset record, not necessarily a unique
-physical building: 123 buildings appear in 247 records, and counting each repeated building once instead
-would remove 1,154 units (0.36% of the citywide total). Meter status and location are a current snapshot,
-not a historical record matched to each completion date. A meter is not a parking space.
+Records without usable coordinates (1,958 housing records, 20.5%) are excluded from proximity shares,
+since a missing coordinate is not evidence of a missing meter. A housing row is a dataset record and may
+not be a unique physical building: 123 buildings appear in 247 records, and counting each repeated
+building once would remove 1,154 units (0.36% of the citywide total). Meter status and location describe
+the city on the snapshot date, and the file keeps no history, so a meter cannot be matched to the
+completion year of the housing beside it. A meter records paid parking equipment, not the number of
+spaces it serves.
 
 ---
 
 ## Key findings
 
 All twelve answers come from one recorded run of the notebook. The record-level associations are weak
-(largest absolute Spearman rho 0.22), so these are screening results, not causal claims. The one larger
-coefficient is the 13-year Q2 trend (rho = 0.46), which is not distinguishable from no trend (p = 0.12).
+(largest absolute Spearman rho 0.22), so these are screening results, not causal claims. The exception is
+the 13-year Q2 trend (rho = 0.46), which is still not distinguishable from no trend (p = 0.12).
 
 | Question | Result from the recorded run |
 |---|---|
@@ -137,13 +141,16 @@ Every answer is discussed with its limitations in the final notebook section.
   containers that become focusable only when they scroll sideways.
 
 The dashboard redraws the notebook’s twelve questions by hand in SVG, so the page needs neither a plotting
-library nor a build step. One deliberate difference: Q2 is a borough-by-completion-year heatmap on the
-site instead of the notebook’s single citywide line, because the yearly line hides the borough differences
-the question is about. Cells with fewer than ten usable records show a dash rather than a percentage, since
-one record would move them by tens of points.
+library nor a build step. Five charts change type. Q2 becomes a heatmap of borough against completion year,
+because the notebook’s single citywide line hides the borough differences the question is about, and cells
+with fewer than ten usable records show a dash, since one record would move a percentage by tens of points.
+Q3 and Q12 show the notebook’s medians as bars instead of box plots. Q5 collapses six scatter panels into
+one bar chart of mean nearby meters per income band. Q7 draws the same two point layers over simplified
+borough outlines. Q1 and Q10 keep their bars but turn them through 90°. The distributions and scatter
+clouds behind the other charts stay in the notebook.
 
 The page keeps text at WCAG 2.2 AA contrast in both themes, respects `prefers-reduced-motion` by dropping
-movement while keeping colour changes, labels every chart and gives every chart’s numbers as a table.
+movement while keeping colour changes, labels every chart and gives its numbers as a table.
 Printing forces the light palette and hides the interactive chrome.
 
 ---
@@ -174,7 +181,7 @@ If the repository is renamed or forked, update the canonical, Open Graph and foo
 | Ahmed Sayed | 16008533 | Q1: active meters per 1,000 affordable units by borough (bar). Q2: share of housing records near an active meter by completion year (line). | Housing dataset: missing values and duplicates | Aggregation of housing data | Dropdown filters |
 | Mohannad Hany | 16008825 | Q3: nearby active meters, new construction vs preservation (box). Q4: 3-bedroom-plus share vs nearby meters (scatter). | Transport dataset: missing values and duplicates | Aggregation of transport data | Search mode |
 | Abdelrahman Mohamed | 16001205 | Q5: income-band shares vs nearby meters (scatter). Q6: community-board new units vs average nearby meters (scatter). | Housing dataset: outliers (IQR + domain rules) | Merge and join-key justification | Generate report callback |
-| Mohamed Wael | 16003528 | Q7: housing and meter locations on one map. Q8: meter status mix near vs far from new housing (stacked bar). | Transport dataset: outliers (domain rules) | Post-integration cleaning | Charts layout and styling |
+| Mohamed Wael | 16003528 | Q7: housing and meter locations on one map. Q8: meter status mix near vs far from new housing (stacked bar). | Transport dataset: outliers (domain rules) | Post-integration cleaning | Chart layout and styling |
 | Kareem Ahmad Aly Mursy Ahmad Alguineedy | 16007546 | Q9: total housing units vs nearby active meters (scatter). Q10: meter time-limit groups by housing proximity (grouped bar). | Standardising dates, ZIPs and boroughs (both datasets) | EDA of the integrated data | Story section |
 | Deema Sameh Mahmoud Abdelwahed Seada | 16002455 | Q11: affordable-unit share vs nearby meters (scatter). Q12: project duration with and without a nearby meter (box). | Inconsistent categories and string cleaning | Feasibility check and notebook Markdown | Deployment, README, final testing |
 

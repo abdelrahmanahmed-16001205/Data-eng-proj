@@ -69,7 +69,7 @@
       </div>
       <div class="hero-copy">
         <p class="lede">The supply behind that figure is uneven: 81 meters per 1,000 affordable units in Queens, 13 in the Bronx.</p>
-        <p class="lede-sub">A descriptive join of two New York City datasets that share no key, no address field and no common date.</p>
+        <p class="lede-sub">A descriptive join of two New York City datasets with no shared identifier.</p>
       </div>
     </div>
 
@@ -153,7 +153,7 @@
     <div class="method-grid">
       <div class="method-copy">
         <h3>No shared key, so the join is spatial</h3>
-        <p>The housing file lists affordable projects by building. The meter file lists parking meters by location. They share no record ID, no reliable address field and no common date: the meter file is a current snapshot with no history.</p>
+        <p>The housing file lists affordable projects by building. The meter file lists parking meters by location. They share no record ID, and their address fields and dates do not line up: the meter file is a current snapshot with no history.</p>
         <ol class="method-steps">
           <li><strong>Index both files onto a grid.</strong> Cells are 0.0009° of latitude by 0.0012° of longitude — about 100 metres on a side at New York’s latitude.</li>
           <li><strong>Count within a fixed window.</strong> Each housing record sums the active meters in the 7&thinsp;×&thinsp;7 block of cells centred on it. That puts the window’s edges roughly 300–400 metres away and its corners up to about 500 metres.</li>
