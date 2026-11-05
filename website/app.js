@@ -47,6 +47,13 @@ const fmt = n => {
   return n.toLocaleString(undefined, { maximumFractionDigits: d });
 };
 const pct = n => (n == null ? '–' : (n * 100).toLocaleString(undefined, { maximumFractionDigits: 1 }) + '%');
+const ordinal = n => n + (
+  n % 100 >= 11 && n % 100 <= 13 ? 'th'
+    : n % 10 === 1 ? 'st'
+      : n % 10 === 2 ? 'nd'
+        : n % 10 === 3 ? 'rd'
+          : 'th'
+);
 
 /* Axis top that lands on round tick values: 80.8 becomes 100, 9 becomes 12. */
 function niceMax(values) {
@@ -127,10 +134,14 @@ function houses() {
   );
 }
 
+/* 36 meter rows carry the literal status "UNKNOWN" rather than a blank, so a
+   truthiness test returned nothing for that filter while q08 counted them. */
+const meterStatus = r => (String(r.status || '').trim().toUpperCase() || 'UNKNOWN');
+
 function meters() {
   return D.meters.filter(r =>
     (applied.borough === 'ALL' || r.borough === applied.borough) &&
-    (applied.status === 'ALL' || (applied.status === 'UNKNOWN' ? !r.status : String(r.status).toUpperCase() === applied.status)) &&
+    (applied.status === 'ALL' || meterStatus(r) === applied.status) &&
     matchesText(r, ['borough', 'on_street', 'from_street', 'to_street', 'status', 'facility'])
   );
 }
@@ -149,7 +160,7 @@ function empty() {
   return '<div class="empty">No usable records match these filters.</div>';
 }
 
-function bars(labels, values, title, xlabel, ylabel, percent = false) {
+function bars(labels, values, title, xlabel, ylabel, percent = false, selected = null) {
   if (!labels.length) return empty();
   const mx = niceMax(values);
   const w = Math.min(66, 650 / labels.length);
@@ -168,9 +179,12 @@ function bars(labels, values, title, xlabel, ylabel, percent = false) {
     const cut = v => (v.length > budget ? v.slice(0, budget - 1) + '…' : v);
     const dense = labels.length > 5;
     const lines = dense && String(l).includes(' · ') ? String(l).split(' · ') : [String(l)];
+    const val = values[i].toLocaleString(undefined, { maximumFractionDigits: 2 }) + (percent ? '%' : '');
+    const on = selected !== null && String(l) === String(selected);
     s += `<g class="bar-col" style="--i:${i}">` +
-      `<rect class="bar" x="${x}" y="${303 - h}" width="${w}" height="${h}" rx="3">` +
-      `<title>${esc(l)}: ${values[i].toLocaleString(undefined, { maximumFractionDigits: 2 })}${percent ? '%' : ''}</title></rect>` +
+      `<rect class="bar${on ? ' is-selected' : ''}" x="${x}" y="${303 - h}" width="${w}" height="${h}" rx="3">` +
+      `<title>${esc(l)}: ${val}</title></rect>` +
+      `<text class="bar-value" x="${x + w / 2}" y="${303 - h - 7}" text-anchor="middle">${esc(val)}</text>` +
       lines.map((v, j) => `<text class="tick" x="${x + w / 2}" y="${lines.length > 1 ? 313 + j * 14 : 319}" text-anchor="middle">${esc(cut(v))}</text>`).join('') +
       `</g>`;
   });
@@ -263,7 +277,7 @@ function mapSvg(h, m, meterLabel) {
   const drawn = pts.filter((_, i) => i % step === 0);
 
   const label = `Housing records are circles, ${meterLabel.toLowerCase()} are squares, drawn over simplified borough boundaries. ` +
-    `${drawn.length.toLocaleString()} of ${pts.length.toLocaleString()} records are shown (every ${step === 1 ? 'record' : step + 'th record'}).`;
+    `${drawn.length.toLocaleString()} of ${pts.length.toLocaleString()} records are shown (every ${step === 1 ? 'record' : ordinal(step) + ' record'}).`;
 
   let s = `<svg viewBox="0 0 820 820" role="img" aria-label="${esc(label)}">`;
   s += '<rect class="map-ground" x="0" y="0" width="820" height="820" rx="2"/>';
@@ -399,8 +413,10 @@ function tableHtml(spec, sort) {
     `<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
-function sampleNote(sampled, total) {
-  return sampled < total ? ` The table lists the first ${sampled.toLocaleString()} of ${total.toLocaleString()} plotted points.` : '';
+function sampleNote(r) {
+  const tableRows = Math.min(r.sampled, TABLE_POINT_CAP);
+  if (r.sampled >= r.total && tableRows >= r.sampled) return '';
+  return ` The table lists ${tableRows.toLocaleString()} of ${r.total.toLocaleString()} records; the chart plots ${r.sampled.toLocaleString()}.`;
 }
 
 /* ------------------------------------------------------------------ *
@@ -408,20 +424,20 @@ function sampleNote(sampled, total) {
  * ------------------------------------------------------------------ */
 
 function q01(h, m) {
-  const labels = applied.borough === 'ALL' ? BOROUGHS : [applied.borough];
-  const boroOk = r => applied.borough === 'ALL' || r.borough === applied.borough;
-  const base = D.buildings.filter(boroOk);
-  const activeMeters = D.meters.filter(r => boroOk(r) && String(r.status).toUpperCase() === 'ACTIVE');
+  /* The five-way spread is the point of this chart, so the borough filter
+     outlines the selection instead of collapsing it to a single bar. */
+  const selected = applied.borough === 'ALL' ? null : applied.borough;
+  const activeMeters = D.meters.filter(r => String(r.status).toUpperCase() === 'ACTIVE');
 
-  const rows = labels.map(b => {
-    const units = base.filter(r => r.borough === b).reduce((a, r) => a + (N(r.all_counted_units) || 0), 0);
+  const rows = BOROUGHS.map(b => {
+    const units = D.buildings.filter(r => r.borough === b).reduce((a, r) => a + (N(r.all_counted_units) || 0), 0);
     const active = activeMeters.filter(r => r.borough === b).length;
     return [b, active, units, units ? active / units * 1000 : 0];
   });
 
   return {
-    svg: bars(rows.map(r => r[0]), rows.map(r => r[3]), 'Active meters per 1,000 affordable units', 'Borough', 'Meters per 1,000 units'),
-    note: 'Active meters divided by all counted affordable units in each borough. Only the borough filter applies: meters are a current snapshot with no completion year, so filtering by year, construction type or meter status would make this stock ratio meaningless.',
+    svg: bars(rows.map(r => r[0]), rows.map(r => r[3]), 'Active meters per 1,000 affordable units', 'Borough', 'Meters per 1,000 units', false, selected),
+    note: 'Active meters divided by all counted affordable units in each borough. The filter panel does not change these totals: meters are a current snapshot with no completion year, so filtering by year, construction type or meter status would make this stock ratio meaningless. All five boroughs stay on the chart; the selected one is outlined.',
     table: {
       caption: 'Active meters, counted affordable units and the resulting ratio per borough.',
       head: ['Borough', 'Active meters', 'Affordable units', 'Meters per 1,000'],
@@ -461,19 +477,20 @@ function q02(h) {
 
 function q03(h) {
   const types = ['New Construction', 'Preservation'];
-  const groups = types.map(t => h.filter(r => r.reporting_construction_type === t));
   const labels = ['New construction', 'Preservation'];
+  const groups = types.map(t => h.filter(r => r.reporting_construction_type === t));
   const medians = groups.map(a => {
     const v = a.map(r => N(r.meters_nearby)).filter(x => x !== null).sort((x, y) => x - y);
-    return v.length ? v[Math.floor(v.length / 2)] : 0;
+    return v.length ? v[Math.floor(v.length / 2)] : null;
   });
+  const shown = medians.map((m, i) => (m === null ? -1 : i)).filter(i => i >= 0);
   return {
-    svg: bars(labels, medians, 'Median nearby active-meter counts', 'Construction type', 'Median meter count'),
-    note: 'For each construction type, bar height is the median nearby active-meter count.',
+    svg: bars(shown.map(i => labels[i]), shown.map(i => medians[i]), 'Median nearby active-meter counts', 'Construction type', 'Median meter count'),
+    note: 'For each construction type, bar height is the median nearby active-meter count. A type with no matching records is left off the chart rather than drawn at zero.',
     table: {
       caption: 'Records and median nearby active meters by construction type.',
       head: ['Construction type', 'Records', 'Median nearby meters'],
-      rows: types.map((t, i) => [t, groups[i].length.toLocaleString(), fmt(medians[i])])
+      rows: types.map((t, i) => [t, groups[i].length.toLocaleString(), medians[i] === null ? '–' : fmt(medians[i])])
     }
   };
 }
@@ -482,7 +499,7 @@ function q04(h) {
   const r = scatter(h, 'share_3br_plus', 'meters_nearby', 'Bedroom composition and nearby active meters', 'Share of counted units with 3+ bedrooms', 'Nearby active meters');
   return {
     svg: r.svg,
-    note: 'Only records with a known three-bedroom share and a proximity count appear.' + sampleNote(r.sampled, r.total),
+    note: 'Only records with a known three-bedroom share and a proximity count appear.' + sampleNote(r),
     table: r.points ? {
       caption: 'Plotted points: three-bedroom share and nearby active meters.',
       head: ['3+ bedroom share', 'Nearby active meters'],
@@ -495,19 +512,20 @@ function q05(h) {
   const cols = ['share_eli', 'share_vli', 'share_low', 'share_moderate', 'share_middle', 'share_other_income'];
   const labels = ['Extremely low', 'Very low', 'Low', 'Moderate', 'Middle', 'Other'];
   const counts = [];
-  const vals = cols.map((c, i) => {
+  const means = cols.map((c, i) => {
     const a = h.filter(r => N(r[c]) !== null && N(r[c]) > 0);
     counts[i] = a.length;
     const v = a.map(r => N(r.meters_nearby)).filter(x => x !== null);
-    return v.length ? v.reduce((u, x) => u + x, 0) / v.length : 0;
+    return v.length ? v.reduce((u, x) => u + x, 0) / v.length : null;
   });
+  const shown = means.map((v, i) => (v === null ? -1 : i)).filter(i => i >= 0);
   return {
-    svg: bars(labels, vals, 'Mean nearby active meters for records reporting each income band', 'Income category', 'Mean nearby active meters'),
-    note: 'Compares proximity counts among records with a positive reported share in each category; “other” is separate.',
+    svg: bars(shown.map(i => labels[i]), shown.map(i => means[i]), 'Mean nearby active meters for records reporting each income band', 'Income category', 'Mean nearby active meters'),
+    note: 'Compares proximity counts among records with a positive reported share in each category; “other” is separate. A band with no matching records is left off the chart rather than drawn at zero.',
     table: {
       caption: 'Records reporting each income band and their mean nearby active meters.',
       head: ['Income band', 'Records', 'Mean nearby meters'],
-      rows: labels.map((l, i) => [l, counts[i].toLocaleString(), vals[i].toFixed(2)])
+      rows: labels.map((l, i) => [l, counts[i].toLocaleString(), means[i] === null ? '–' : means[i].toFixed(2)])
     }
   };
 }
@@ -551,7 +569,7 @@ function q07(h, m) {
     `<li><span class="swatch meter"></span>${esc(meterLabel)}</li></ul></div>` +
     `<div><h4>Sampling</h4><p class="chart-note">${map.step === 1
       ? `All ${map.total.toLocaleString()} records with usable coordinates are drawn.`
-      : `Every ${map.step}${map.step === 2 ? 'nd' : map.step === 3 ? 'rd' : 'th'} record is drawn, ${map.drawn.toLocaleString()} of ${map.total.toLocaleString()}, so the page stays responsive. Clustering is representative, not an exact count.`}</p></div>` +
+      : `Every ${ordinal(map.step)} record is drawn, ${map.drawn.toLocaleString()} of ${map.total.toLocaleString()}, so the page stays responsive. Clustering is representative, not an exact count.`}</p></div>` +
     '<div><h4>Reading it</h4><p class="chart-note">Borough boundaries are simplified outlines, not survey geometry. Overlapping points are expected: several records can share an address.</p></div>';
 
   return {
@@ -573,7 +591,7 @@ function q08(h, m) {
   groups.forEach((g, j) => {
     const a = m.filter(r => N(r.near_new_housing) !== null && (N(r.near_new_housing) > 0) === Boolean(j));
     statuses.forEach(st => {
-      const count = a.filter(r => (r.status || '').toUpperCase() === st || (st === 'UNKNOWN' && !r.status)).length;
+      const count = a.filter(r => meterStatus(r) === st).length;
       labels.push(`${g} · ${st.toLowerCase()}`);
       values.push(a.length ? 100 * count / a.length : 0);
       rows.push([g === 'Far' ? 'No new housing nearby' : 'New housing nearby', st, count.toLocaleString(), a.length ? (100 * count / a.length).toFixed(1) + '%' : '–']);
@@ -595,7 +613,7 @@ function q09(h) {
   const r = scatter(h, 'total_units', 'meters_nearby', 'Housing record size and nearby active meters', 'Total units in record', 'Nearby active meters');
   return {
     svg: r.svg,
-    note: 'Record size explains very little of the variation in nearby meters.' + sampleNote(r.sampled, r.total),
+    note: 'Record size explains very little of the variation in nearby meters.' + sampleNote(r),
     table: r.points ? {
       caption: 'Plotted points: total units and nearby active meters.',
       head: ['Total units', 'Nearby active meters'],
@@ -628,7 +646,7 @@ function q11(h) {
   const r = scatter(h, 'affordable_share', 'meters_nearby', 'Affordable-unit share and nearby active meters', 'Affordable units / total units', 'Nearby active meters');
   return {
     svg: r.svg,
-    note: 'A weak negative association: records with a higher affordable share sit slightly farther from active meters.' + sampleNote(r.sampled, r.total),
+    note: 'A weak negative association: records with a higher affordable share sit slightly farther from active meters.' + sampleNote(r),
     table: r.points ? {
       caption: 'Plotted points: affordable-unit share and nearby active meters.',
       head: ['Affordable share', 'Nearby active meters'],
@@ -642,15 +660,16 @@ function q12(h) {
   const labels = ['No active meter nearby', 'Active meter nearby'];
   const groups = [0, 1].map(j => {
     const x = a.filter(r => (N(r.near_meter) > 0) === Boolean(j)).map(r => N(r.duration_days)).sort((u, v) => u - v);
-    return { n: x.length, median: x.length ? x[Math.floor(x.length / 2)] : 0 };
+    return { n: x.length, median: x.length ? x[Math.floor(x.length / 2)] : null };
   });
+  const shown = groups.map((g, i) => (g.n ? i : -1)).filter(i => i >= 0);
   return {
-    svg: bars(labels, groups.map(g => g.median), 'Median project duration by active-meter proximity', 'Proximity group', 'Median duration (days)'),
-    note: 'Median duration among records with both dates and a known proximity value. Records without coordinates have no proximity classification and are excluded rather than treated as unmetered.',
+    svg: bars(shown.map(i => labels[i]), shown.map(i => groups[i].median), 'Median project duration by active-meter proximity', 'Proximity group', 'Median duration (days)'),
+    note: 'Median duration among records with both dates and a known proximity value. Records without coordinates have no proximity classification and are excluded rather than treated as unmetered. An empty group is left off the chart rather than drawn at zero.',
     table: {
       caption: 'Records and median project duration by active-meter proximity.',
       head: ['Proximity group', 'Records', 'Median duration (days)'],
-      rows: labels.map((l, i) => [l, groups[i].n.toLocaleString(), fmt(groups[i].median)])
+      rows: labels.map((l, i) => [l, groups[i].n.toLocaleString(), groups[i].median === null ? '–' : fmt(groups[i].median)])
     }
   };
 }
@@ -706,6 +725,7 @@ const COMPARE_DEFAULT = { a: 'QUEENS', b: 'BRONX' };
 
 let compareA = COMPARE_DEFAULT.a;
 let compareB = COMPARE_DEFAULT.b;
+let compareAnnounced = false;
 
 const compareMetrics = [
   ['affordable_units', 'Affordable units', v => v.toLocaleString(undefined, { maximumFractionDigits: 0 })],
@@ -731,6 +751,20 @@ function ratioText(v) {
   return v >= 100 ? v.toFixed(0) : v.toFixed(1);
 }
 
+/* One spoken sentence per change, written into a live region that outlives the
+   re-render. Inserting an already-populated live region is not announced. */
+function compareSentence(a, b) {
+  const ra = boroughRow(a);
+  const rb = boroughRow(b);
+  const [key] = compareMetrics[COMPARE_KEY_METRIC];
+  const ratio = compareRatio(ra ? N(ra[key]) : null, rb ? N(rb[key]) : null, a, b);
+  if (!ratio) return '';
+  const trail = ratio.name === a ? b : a;
+  return ratioText(ratio.value) === '1.0'
+    ? `${ratio.name} has as many active meters per 1,000 affordable units as ${trail}.`
+    : `${ratio.name} has ${ratioText(ratio.value)}× more active meters per 1,000 affordable units than ${trail}.`;
+}
+
 function compareBodyHtml(a, b) {
   const ra = boroughRow(a);
   const rb = boroughRow(b);
@@ -754,7 +788,7 @@ function compareBodyHtml(a, b) {
       : `more active meters per 1,000 affordable units in ${esc(lead)} than in ${esc(trail)}`;
 
   const sign =
-    `<div class="cmp-sign" aria-live="polite">` +
+    `<div class="cmp-sign">` +
       `<p class="sign-num">${keyRatio ? ratioText(keyRatio.value) + '×' : '–'}</p>` +
       `<p class="sign-label">${signLabel}</p>` +
       `<p class="cmp-pair"><span>${esc(a)} ${ka == null ? '–' : keyMetric[2](ka)}</span>` +
@@ -779,7 +813,11 @@ function compareBodyHtml(a, b) {
     return `<div class="cmp-row">` +
       `<div class="cmp-row-head"><h3 class="cmp-label">${esc(label)}</h3>` +
       (ratio
-        ? `<span class="cmp-ratio">${esc(ratio.name)} ${ratioText(ratio.value)}×<span class="sr-only"> the other borough</span></span>`
+        ? `<span class="cmp-ratio">${
+          ratioText(ratio.value) === '1.0'
+            ? 'Even'
+            : `${esc(ratio.name)} ${ratioText(ratio.value)}× ${esc(ratio.name === a ? b : a)}`
+        }</span>`
         : '') +
       `</div>` +
       line(a, va, 'a') + line(b, vb, 'b') +
@@ -823,7 +861,19 @@ function renderCompare() {
   [...a.options].forEach(o => { o.disabled = o.value === compareB; });
   [...b.options].forEach(o => { o.disabled = o.value === compareA; });
 
-  $('#compare-body').innerHTML = compareBodyHtml(compareA, compareB);
+  const body = $('#compare-body');
+  const wasOpen = !!body.querySelector('.cmp-data')?.open;
+  body.innerHTML = compareBodyHtml(compareA, compareB);
+  if (wasOpen) {
+    const table = body.querySelector('.cmp-data');
+    if (table) table.open = true;
+  }
+  body.setAttribute('aria-busy', 'false');
+
+  /* The boot call stays silent so the region does not talk over the hero. */
+  if (compareAnnounced) $('#cmp-status').textContent = compareSentence(compareA, compareB);
+  compareAnnounced = true;
+
   writeUrl();
 }
 
@@ -837,14 +887,22 @@ $('#cmp-b').addEventListener('change', e => {
   renderCompare();
 });
 
+let swapFlipTimer;
+
 $('#cmp-swap').addEventListener('click', () => {
   const held = compareA;
   compareA = compareB;
   compareB = held;
 
+  /* Removing and re-adding in the same frame does not restart a keyframe, so
+     commit the removal with one reflow first. A second press inside 240ms then
+     turns the arrow again instead of being cut off by the first timer. */
   const button = $('#cmp-swap');
+  button.classList.remove('is-flipping');
+  void button.offsetWidth;
   button.classList.add('is-flipping');
-  setTimeout(() => button.classList.remove('is-flipping'), 240);
+  clearTimeout(swapFlipTimer);
+  swapFlipTimer = setTimeout(() => button.classList.remove('is-flipping'), 240);
 
   renderCompare();
 });
@@ -856,33 +914,55 @@ $('#cmp-swap').addEventListener('click', () => {
 function buildIndex() {
   $('#chart-index').innerHTML = questions.map((q, i) => {
     const n = String(i + 1).padStart(2, '0');
-    return `<a href="#q${n}" title="${esc(q[0])}">Q${n}</a>`;
+    return `<a href="#q${n}" title="${esc(q[0])}" aria-label="Question ${i + 1}: ${esc(q[0])}">Q${n}</a>`;
   }).join('');
 }
 
-let panelObserver;
+/* The index marks the question row at the top of the reading area. The grid is
+   two columns wide, so a row holds one or two panels: both are marked rather
+   than picking a column arbitrarily — and Q12, which is last, can never be
+   scrolled up to the line, so the row below the line is used when nothing
+   straddles it. A scroll listener rather than an IntersectionObserver, because
+   the winner can change without any panel edge crossing the viewport. */
+let spyFrame = 0;
+let spyBound = false;
 
-function watchPanels() {
+function spyPanels() {
+  spyFrame = 0;
   const links = [...document.querySelectorAll('#chart-index a')];
-  if (!links.length) return;
+  const panels = [...document.querySelectorAll('.chart-panel')];
+  if (!links.length || !panels.length) return;
 
-  if (!panelObserver) {
-    panelObserver = new IntersectionObserver(() => {
-      let best = null, bestTop = Infinity;
-      document.querySelectorAll('.chart-panel').forEach(p => {
-        const r = p.getBoundingClientRect();
-        if (r.bottom > 80 && r.top < bestTop) { bestTop = r.top; best = p; }
-      });
-      if (!best) return;
-      links.forEach(a => {
-        if (a.hash === '#' + best.id) a.setAttribute('aria-current', 'true');
-        else a.removeAttribute('aria-current');
-      });
-    }, { threshold: 0 });
+  const line = 80;
+  const vh = window.innerHeight;
+  const rects = panels.map(p => ({ p, r: p.getBoundingClientRect() }));
+
+  let row = rects.filter(({ r }) => r.top <= line && r.bottom > line);
+  if (!row.length) {
+    const visible = rects.filter(({ r }) => r.bottom > line && r.top < vh);
+    if (visible.length) {
+      const top = Math.min(...visible.map(({ r }) => r.top));
+      row = visible.filter(({ r }) => Math.abs(r.top - top) < 1);
+    }
   }
 
-  panelObserver.disconnect();
-  document.querySelectorAll('.chart-panel').forEach(p => panelObserver.observe(p));
+  const current = new Set(row.map(({ p }) => '#' + p.id));
+  links.forEach(a => {
+    if (current.has(a.hash)) a.setAttribute('aria-current', 'true');
+    else a.removeAttribute('aria-current');
+  });
+}
+
+function queueSpy() {
+  if (!spyFrame) spyFrame = requestAnimationFrame(spyPanels);
+}
+
+function watchPanels() {
+  spyPanels();
+  if (spyBound) return;
+  spyBound = true;
+  window.addEventListener('scroll', queueSpy, { passive: true });
+  window.addEventListener('resize', queueSpy);
 }
 
 /* ------------------------------------------------------------------ *
@@ -909,9 +989,9 @@ function syncScrollers() {
  * Render
  * ------------------------------------------------------------------ */
 
-function summaryHtml(h, m) {
+function summaryHtml(h, m, announce) {
   const parts = [
-    `<em class="sr-only">Twelve charts updated. </em><strong>Report generated</strong>`,
+    (announce ? '<em class="sr-only">Twelve charts updated. </em>' : '') + '<strong>Report generated</strong>',
     `<span>${h.length.toLocaleString()} housing records</span>`,
     `<span>${m.length.toLocaleString()} meter records</span>`,
     `<span>${applied.borough === 'ALL' ? 'All boroughs' : esc(applied.borough)}</span>`
@@ -924,6 +1004,9 @@ function summaryHtml(h, m) {
   return parts.join('');
 }
 
+let revealedMarks = false;
+let reportAnnounced = false;
+
 function render() {
   if (!D.buildings) return;
 
@@ -932,11 +1015,21 @@ function render() {
   const m = meters();
 
   grid.classList.add('is-swapping');
+  /* Chart marks animate on the first render only; every later render keeps the
+     140ms crossfade and nothing else. */
+  grid.classList.toggle('reveal-marks', !revealedMarks);
+  revealedMarks = true;
   tables = [];
   grid.innerHTML = questions.map((_, i) => makeChart(i, h, m)).join('');
   grid.setAttribute('aria-busy', 'false');
 
-  $('#report-summary').innerHTML = summaryHtml(h, m);
+  const summary = $('#report-summary');
+  summary.innerHTML = summaryHtml(h, m, reportAnnounced);
+  /* Nothing was updated on the first render, and the region would otherwise
+     read the whole summary over the hero. Arm it after that first paint. */
+  if (!reportAnnounced) summary.setAttribute('aria-live', 'polite');
+  reportAnnounced = true;
+
   $('#load-status').textContent = 'Report generated from the integrated CSV exports.';
 
   /* Commit the dimmed state, then release it so the base transition carries the
@@ -966,7 +1059,7 @@ function writeUrl() {
   if (compareB !== COMPARE_DEFAULT.b) p.set('b', compareB);
   const qs = p.toString();
   try {
-    history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+    history.replaceState(null, '', (qs ? '?' + qs : location.pathname) + location.hash);
   } catch (e) { /* file:// or blocked history */ }
 }
 
@@ -1111,11 +1204,23 @@ $('#reset').addEventListener('click', () => {
 
 document.querySelectorAll('.search-examples .chip').forEach(chip => {
   chip.addEventListener('click', () => {
+    /* The panel is built around "set filters, then generate", so a chip fills
+       the field and leaves the commit to the Generate button. Setting .value
+       does not fire input, so the stale note needs the explicit call. */
     $('#search').value = chip.dataset.query;
-    parseSearch();
-    render();
+    setDirty(true);
+    $('#search').focus();
   });
 });
+
+/* Nothing to generate until the CSVs land; a live button that silently does
+   nothing is worse than a disabled one. */
+function setControlsReady(ready) {
+  ['#generate', '#reset', '#cmp-a', '#cmp-b', '#cmp-swap'].forEach(s => { $(s).disabled = !ready; });
+  document.querySelectorAll('.search-examples .chip').forEach(b => { b.disabled = !ready; });
+}
+
+setControlsReady(false);
 
 $('#print-report').addEventListener('click', () => window.print());
 
@@ -1149,7 +1254,12 @@ $('#charts-grid').addEventListener('click', e => {
   details._sort = { col, dir };
 
   const wrap = details.querySelector('.table-wrap');
-  if (wrap) wrap.outerHTML = tableHtml(spec, details._sort);
+  if (wrap) {
+    wrap.outerHTML = tableHtml(spec, details._sort);
+    /* The sort rebuilds the header, so the button that was activated no longer
+       exists and focus would fall to <body>. Put it back on the same column. */
+    details.querySelector('.sort-btn[data-col="' + col + '"]')?.focus({ preventScroll: true });
+  }
 });
 
 /* ------------------------------------------------------------------ *
@@ -1266,7 +1376,16 @@ addEventListener('beforeprint', settleCounts);
 buildIndex();
 countUp();
 
-Promise.all(files.map(async f => [f, csv(await (await fetch(`../Data/${f}.csv`)).text())]))
+/* A 404 answers with a body, so fetch resolves and the parser turns the error
+   page into one column of nonsense. Check the status, or a missing file shows
+   as an empty report instead of the error panel. */
+const loadCsv = async f => {
+  const res = await fetch(`../Data/${f}.csv`);
+  if (!res.ok) throw new Error(`${f}.csv: HTTP ${res.status}`);
+  return [f, csv(await res.text())];
+};
+
+Promise.all(files.map(loadCsv))
   .then(entries => {
     const loaded = Object.fromEntries(entries);
     D = {
@@ -1286,12 +1405,25 @@ Promise.all(files.map(async f => [f, csv(await (await fetch(`../Data/${f}.csv`))
     parseSearch();
     render();
     renderCompare();
+    setControlsReady(true);
+
+    /* A cold deep link is not scrolled by the browser because the target did
+       not exist when the fragment was first resolved. */
+    if (location.hash.length > 1) {
+      let id = location.hash.slice(1);
+      try { id = decodeURIComponent(id); } catch (err) { /* keep the raw value */ }
+      const target = document.getElementById(id);
+      if (target) target.scrollIntoView({ block: 'start' });
+    }
   })
   .catch(e => {
     $('#load-status').textContent = 'Unable to load CSVs. Start the server from the project root as described in README.';
     $('#charts-grid').innerHTML = '<div class="panel empty">The dashboard needs access to the CSV files in the Data folder.</div>';
     $('#charts-grid').setAttribute('aria-busy', 'false');
-    $('#compare-body').innerHTML = '<p class="empty">The comparison needs the CSV files in the Data folder.</p>';
+    const body = $('#compare-body');
+    body.innerHTML = '<p class="empty">The comparison needs the CSV files in the Data folder.</p>';
+    body.setAttribute('aria-busy', 'false');
+    $('.compare-controls').hidden = true;
     console.error(e);
   });
 

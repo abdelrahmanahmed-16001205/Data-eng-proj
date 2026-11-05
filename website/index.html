@@ -76,7 +76,7 @@
     <dl class="stats">
       <div><dt>Housing records</dt><dd><span data-count="9551">9,551</span></dd></div>
       <div><dt>Meter records</dt><dd><span data-count="15592">15,592</span></dd></div>
-      <div><dt>Meters per 1,000 units</dt><dd><span data-count="81">81</span>&thinsp;:&thinsp;<span data-count="13">13</span></dd></div>
+      <div><dt>Excluded, no coordinates</dt><dd><span data-count="20.5" data-decimals="1">20.5</span>%</dd></div>
       <div><dt>Matched to a meter</dt><dd><span data-count="75.7" data-decimals="1">75.7</span>%</dd></div>
     </dl>
   </div>
@@ -94,7 +94,7 @@
 
     <div class="control-field search-control">
       <label for="search">Search</label>
-      <input id="search" type="search" placeholder="Brooklyn 2022 new buildings" aria-describedby="search-hint">
+      <input id="search" type="search" placeholder="Brooklyn 2022 new buildings" aria-describedby="search-hint" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false">
     </div>
     <div class="control-actions">
       <button id="generate" class="btn-primary" type="button">Generate report</button>
@@ -112,7 +112,7 @@
     <p id="load-status" class="load-status" role="status">Loading project data…</p>
   </section>
 
-  <section id="report-summary" class="report-summary" aria-live="polite"></section>
+  <section id="report-summary" class="report-summary"></section>
   <div class="report-actions">
     <span class="report-actions-label">Export the filtered rows</span>
     <button type="button" class="btn-ghost btn-small" id="download-housing">Housing CSV</button>
@@ -138,7 +138,10 @@
       </div>
     </div>
     <p class="compare-scope">Full borough totals. The filters above do not apply.</p>
-    <div id="compare-body" class="compare-body"></div>
+    <div id="compare-body" class="compare-body" aria-busy="true">
+      <p class="chart-note">Loading borough totals…</p>
+    </div>
+    <p id="cmp-status" class="sr-only" role="status"></p>
   </section>
 
   <h2 class="section-bar" id="views"><span class="bar-num">03</span> Twelve views</h2>

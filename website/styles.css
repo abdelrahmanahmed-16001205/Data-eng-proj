@@ -57,7 +57,6 @@
   --ease-out: cubic-bezier(.23, 1, .32, 1);
   --dur-fast: 120ms;
   --dur-base: 200ms;
-  --dur-slow: 420ms;
   --dur-reveal: 620ms;
 
   --display: 'Archivo Narrow', 'Arial Narrow', sans-serif;
@@ -200,10 +199,15 @@ kbd {
   letter-spacing: .06em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: border-color var(--dur-fast) ease, background-color var(--dur-fast) ease;
+  transition: border-color var(--dur-fast) ease,
+              background-color var(--dur-fast) ease,
+              transform var(--dur-fast) var(--ease-out);
 }
 
-.theme-toggle:hover { border-color: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .theme-toggle:hover { border-color: var(--ink); }
+}
+
 .theme-toggle:active { transform: scale(.98); }
 .theme-toggle .icon-sun { display: none; }
 [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
@@ -388,9 +392,11 @@ main { padding-bottom: 56px; }
   font: 400 15px/1.4 var(--sans);
 }
 
-.controls select:hover,
-.controls input:hover,
-.compare-controls select:hover { border-color: var(--note); }
+@media (hover: hover) and (pointer: fine) {
+  .controls select:hover,
+  .controls input:hover,
+  .compare-controls select:hover { border-color: var(--note); }
+}
 
 .search-control { grid-column: span 2; }
 
@@ -440,10 +446,12 @@ main { padding-bottom: 56px; }
               transform var(--dur-fast) var(--ease-out);
 }
 
-.chip:hover {
-  border-color: var(--green);
-  background: var(--paper);
-  color: var(--ink);
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover {
+    border-color: var(--green);
+    background: var(--paper);
+    color: var(--ink);
+  }
 }
 
 .chip:active { transform: scale(.97); }
@@ -486,7 +494,10 @@ main { padding-bottom: 56px; }
   color: var(--on-green);
 }
 
-.btn-primary:hover { background: var(--green-deep); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover { background: var(--green-deep); }
+}
+
 .btn-primary:active,
 .btn-ghost:active { transform: scale(.98); }
 
@@ -497,9 +508,23 @@ main { padding-bottom: 56px; }
   font-weight: 500;
 }
 
-.btn-ghost:hover {
-  border-color: var(--ink);
-  background: var(--paper);
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost:hover {
+    border-color: var(--ink);
+    background: var(--paper);
+  }
+}
+
+/* Before the CSVs land, a control that would silently do nothing reads as
+   broken. These states are the only honest signal available at that point. */
+.btn-primary:disabled,
+.btn-ghost:disabled,
+.chip:disabled,
+.swap-btn:disabled,
+.controls select:disabled,
+.compare-controls select:disabled {
+  opacity: .55;
+  cursor: not-allowed;
 }
 
 .btn-small {
@@ -584,10 +609,16 @@ main { padding-bottom: 56px; }
   margin: 0 0 16px;
   background: var(--ground);
   border-bottom: 1px solid var(--hair);
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--axis) transparent;
 }
 
-.chart-index::-webkit-scrollbar { display: none; }
+/* A visible thumb only when the row actually overflows: at 1280px all twelve
+   chips fit and nothing is drawn. Hiding it entirely left no cue that Q08–Q12
+   existed on a phone. */
+.chart-index::-webkit-scrollbar { height: 6px; }
+.chart-index::-webkit-scrollbar-thumb { background: var(--axis); border-radius: 3px; }
+.chart-index::-webkit-scrollbar-track { background: transparent; }
 
 .chart-index a {
   flex: none;
@@ -600,13 +631,20 @@ main { padding-bottom: 56px; }
   letter-spacing: .03em;
   text-decoration: none;
   white-space: nowrap;
-  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+  transition: color var(--dur-fast) ease,
+              border-color var(--dur-fast) ease,
+              background-color var(--dur-fast) ease,
+              transform var(--dur-fast) var(--ease-out);
 }
 
-.chart-index a:hover {
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) and (pointer: fine) {
+  .chart-index a:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }
+
+.chart-index a:active { transform: scale(.97); }
 
 .chart-index a[aria-current="true"] {
   background: var(--green);
@@ -642,7 +680,7 @@ main { padding-bottom: 56px; }
   border-radius: 2px;
   background: linear-gradient(90deg, var(--hair-pale) 25%, var(--hair) 37%, var(--hair-pale) 63%);
   background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
+  animation: shimmer 1.4s linear infinite;
 }
 
 .sk-line--tab { width: 42px; height: 18px; }
@@ -658,19 +696,26 @@ main { padding-bottom: 56px; }
   padding: 18px;
   border-top: 2px solid var(--rule);
   min-width: 0;
+  position: relative;
+}
+
+/* The hover shadow lives on a pseudo-element so only opacity is composited;
+   transitioning box-shadow repainted the whole panel every frame. */
+.chart-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: 0 16px 36px -32px rgba(0, 0, 0, .8);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chart-panel:hover::after { opacity: 1; }
 }
 
 .chart-panel--wide { grid-column: 1 / -1; }
-
-@media (hover: hover) {
-  .chart-panel {
-    transition: box-shadow var(--dur-base) var(--ease-out);
-  }
-
-  .chart-panel:hover {
-    box-shadow: 0 16px 36px -32px rgba(0, 0, 0, .8);
-  }
-}
 
 .chart-heading {
   display: flex;
@@ -741,6 +786,12 @@ main { padding-bottom: 56px; }
 .gridline { stroke: var(--hair-pale); stroke-width: 1; }
 .tick, .axis-label { font: 14px var(--mono); fill: var(--note); }
 .bar { fill: var(--green); }
+
+/* The chart keeps all five boroughs when one is filtered; the outline marks
+   the selection. A dimmed fill would fail the 3:1 non-text contrast floor. */
+.bar.is-selected { stroke: var(--ink); stroke-width: 2; }
+
+.bar-value { font: 500 11px var(--mono); fill: var(--note); }
 .dot { fill: var(--red); fill-opacity: .8; }
 .dot.secondary { fill: var(--green); }
 .map-ground { fill: var(--map-water); }
@@ -761,48 +812,55 @@ main { padding-bottom: 56px; }
 .heat-row { font: 500 12px var(--mono); fill: var(--note); }
 
 /* Chart marks arrive after the panel does: bars grow from their baseline,
-   points and heat cells fade in with a short stagger. */
+   points and heat cells fade in with a short stagger. The .reveal-marks class
+   is set on the first render only, so a Generate after that is just the
+   crossfade — the data does not replay its entrance every time. */
 @media (prefers-reduced-motion: no-preference) {
-  .bar-col,
-  .bar-row {
+  .charts-grid.reveal-marks .bar-col,
+  .charts-grid.reveal-marks .bar-row {
     animation: fade-in 420ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms);
   }
 
-  .bar-col .bar {
+  .charts-grid.reveal-marks .bar-col .bar {
     transform-box: fill-box;
     transform-origin: bottom;
     animation: grow-up 620ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms);
   }
 
-  .bars-h .bar-row .bar {
+  .charts-grid.reveal-marks .bar-value {
+    animation: fade-in 220ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms + 380ms);
+  }
+
+  .charts-grid.reveal-marks .bars-h .bar-row .bar {
     transform-box: fill-box;
     transform-origin: left center;
     animation: grow-right 620ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms);
   }
 
-  .scatter .dot {
+  .charts-grid.reveal-marks .scatter .dot {
     transform-box: fill-box;
     transform-origin: center;
     animation: dot-in 360ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 1.2ms);
   }
 
-  .heat-cell {
+  .charts-grid.reveal-marks .heat-cell {
     transform-box: fill-box;
     transform-origin: center;
     animation: cell-in 460ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 28ms);
   }
 
-  .heat-label {
-    animation: fade-in 300ms ease both;
+  .charts-grid.reveal-marks .heat-label {
+    animation: fade-in 300ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 28ms + 120ms);
   }
 
-  .map-points {
+  .charts-grid.reveal-marks .map-points {
     animation: fade-in 700ms var(--ease-out) both;
   }
 }
@@ -822,6 +880,10 @@ main { padding-bottom: 56px; }
 }
 
 .wide-body { display: grid; gap: 20px; align-items: start; }
+
+/* A square map at full panel width was the tallest object on the page — one
+   viewport for one of twelve charts. */
+.chart-panel--wide .chart { max-width: 640px; }
 
 .wide-side { display: flex; flex-direction: column; gap: 14px; }
 
@@ -869,12 +931,15 @@ main { padding-bottom: 56px; }
 
 .chart-data summary {
   cursor: pointer;
+  padding: 5px 0;
   font: 500 12px/1.4 var(--mono);
   letter-spacing: .04em;
   color: var(--green-text);
 }
 
-.chart-data summary:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .chart-data summary:hover { color: var(--ink); }
+}
 
 .table-wrap {
   margin-top: 10px;
@@ -935,7 +1000,9 @@ main { padding-bottom: 56px; }
 
 .chart-data th:first-child .sort-btn { justify-content: flex-start; }
 
-.sort-btn:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) {
+  .sort-btn:hover { color: var(--ink); }
+}
 .sort-btn.is-sorted { color: var(--green-text); }
 
 .sort-mark {
@@ -969,6 +1036,9 @@ main { padding-bottom: 56px; }
   max-width: 540px;
 }
 
+/* The grid sets display, which would override the hidden attribute. */
+.compare-controls[hidden] { display: none; }
+
 .compare-controls .control-field { min-width: 0; }
 
 .compare-scope {
@@ -992,9 +1062,11 @@ main { padding-bottom: 56px; }
               transform var(--dur-fast) var(--ease-out);
 }
 
-.swap-btn:hover {
-  background: var(--paper);
-  border-color: var(--ink);
+@media (hover: hover) and (pointer: fine) {
+  .swap-btn:hover {
+    background: var(--paper);
+    border-color: var(--ink);
+  }
 }
 
 .swap-btn:active { transform: scale(.97); }
@@ -1037,7 +1109,11 @@ main { padding-bottom: 56px; }
 }
 
 @media (min-width: 1000px) {
-  .cmp-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cmp-rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+  }
 }
 
 .cmp-row {
@@ -1102,6 +1178,12 @@ main { padding-bottom: 56px; }
   .cmp-fill {
     animation: grow-right 320ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms);
+  }
+
+  /* The sign is recreated on every change, so the ratio arrives instead of
+     teleporting. Reduced motion drops it with no extra rule. */
+  .cmp-sign {
+    animation: fade-in 160ms var(--ease-out) both;
   }
 }
 
@@ -1520,7 +1602,7 @@ main { padding-bottom: 56px; }
     gap: 36px;
   }
 
-  .wide-body { grid-template-columns: minmax(0, 1fr) 270px; }
+  .wide-body { grid-template-columns: minmax(0, 640px) minmax(0, 1fr); }
 }
 
 /* ---------- Footer ---------- */
@@ -1556,8 +1638,10 @@ footer {
   text-underline-offset: 2px;
 }
 
-.footer-main a:hover,
-.footer-links a:hover { border-bottom-color: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .footer-main a:hover,
+  .footer-links a:hover { border-bottom-color: currentColor; }
+}
 
 .footer-links {
   display: flex;
@@ -1626,6 +1710,7 @@ footer {
   .btn-ghost:active,
   .theme-toggle:active,
   .swap-btn:active,
+  .chart-index a:active,
   .chip:active { transform: none; }
 
   .swap-btn svg { animation: none !important; }
@@ -1638,6 +1723,7 @@ footer {
   .bar-col .bar,
   .bar-row,
   .bars-h .bar-row .bar,
+  .bar-value,
   .scatter .dot,
   .heat-cell,
   .heat-label,
@@ -1783,7 +1869,7 @@ footer {
   .compare { padding: 14px; }
   .compare-controls { grid-template-columns: minmax(0, 1fr); max-width: none; }
   .compare-controls .control-field:first-child { grid-row: 1; }
-  .swap-btn { grid-row: 2; width: 100%; height: 38px; }
+  .swap-btn { grid-row: 2; width: 100%; height: 40px; }
   .compare-controls .control-field:last-child { grid-row: 3; }
   .hero-sign { padding: 16px; }
   .sign-label { font-size: 13px; }
@@ -1792,4 +1878,14 @@ footer {
   .team { padding: 18px; }
   .impact-block { padding: 18px; }
   .sensitivity-list li { min-width: 100%; }
+}
+
+/* Size by pointer capability, not viewport width: a 768–1024px tablet is
+   coarse-pointer and would otherwise keep the 26.8px chips and 34px buttons. */
+@media (any-pointer: coarse) {
+  .chip,
+  .theme-toggle,
+  .btn-small { min-height: 40px; }
+
+  .chip { display: inline-flex; align-items: center; }
 }
