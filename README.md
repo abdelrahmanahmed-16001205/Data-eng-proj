@@ -202,8 +202,3 @@ If the repository is renamed or forked, update the canonical, Open Graph and foo
 - `sample_data/` is the default folder created by Google Colab. Nothing in the analysis reads it.
 - Local agent tooling (`.opencode/`, `opencode.json`, `.openchamber/`, `.playwright-cli/`) is excluded by
   `.gitignore` and is not part of the submission.
-
-## Submission
-
-The milestone brief asks for one team email containing all member IDs, the repository URL, the deployed
-site URL and both dataset links.
