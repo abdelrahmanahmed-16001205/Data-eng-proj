@@ -352,6 +352,10 @@ main { padding-bottom: 56px; }
   letter-spacing: .06em;
 }
 
+/* Print hides the filter controls, so the bar would head the applied-filter
+   summary with a label that describes controls the page no longer shows. */
+.bar-print { display: none; }
+
 /* ---------- Controls ---------- */
 
 .panel {
@@ -1785,6 +1789,9 @@ footer {
   .skip-link,
   .footer-links,
   .chart-data { display: none !important; }
+
+  .bar-screen { display: none; }
+  .bar-print { display: inline; }
 
   body { background: #fff; }
 
