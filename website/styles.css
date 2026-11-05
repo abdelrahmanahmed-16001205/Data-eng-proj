@@ -602,6 +602,9 @@ main { padding-bottom: 56px; }
   text-wrap: pretty;
 }
 
+/* Sticky inside `.views`, the wrapper around the index and the grid: the
+   containing block ends with the last chart, so the index leaves the screen at
+   Q12 instead of staying pinned through the story and team sections. */
 .chart-index {
   position: sticky;
   top: 0;
