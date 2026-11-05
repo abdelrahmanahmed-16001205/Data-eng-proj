@@ -818,56 +818,56 @@ main { padding-bottom: 56px; }
 .heat-head { font: 500 12px var(--mono); fill: var(--note); text-anchor: middle; }
 .heat-row { font: 500 12px var(--mono); fill: var(--note); }
 
-/* Chart marks arrive after the panel does: bars grow from their baseline,
-   points and heat cells fade in with a short stagger. The .reveal-marks class
-   is set on the first render only, so a Generate after that is just the
-   crossfade — the data does not replay its entrance every time. */
+/* Chart marks arrive when their panel first reaches the viewport: bars grow
+   from their baseline, points and heat cells fade in with a short stagger. The
+   class is added once per panel by an IntersectionObserver, so a Generate after
+   that is just the crossfade — the data does not replay its entrance. */
 @media (prefers-reduced-motion: no-preference) {
-  .charts-grid.reveal-marks .bar-col,
-  .charts-grid.reveal-marks .bar-row {
+  .chart-panel.is-revealed .bar-col,
+  .chart-panel.is-revealed .bar-row {
     animation: fade-in 420ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms);
   }
 
-  .charts-grid.reveal-marks .bar-col .bar {
+  .chart-panel.is-revealed .bar-col .bar {
     transform-box: fill-box;
     transform-origin: bottom;
     animation: grow-up 620ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms);
   }
 
-  .charts-grid.reveal-marks .bar-value {
+  .chart-panel.is-revealed .bar-value {
     animation: fade-in 220ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms + 380ms);
   }
 
-  .charts-grid.reveal-marks .bars-h .bar-row .bar {
+  .chart-panel.is-revealed .bars-h .bar-row .bar {
     transform-box: fill-box;
     transform-origin: left center;
     animation: grow-right 620ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 45ms);
   }
 
-  .charts-grid.reveal-marks .scatter .dot {
+  .chart-panel.is-revealed .scatter .dot {
     transform-box: fill-box;
     transform-origin: center;
     animation: dot-in 360ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 1.2ms);
   }
 
-  .charts-grid.reveal-marks .heat-cell {
+  .chart-panel.is-revealed .heat-cell {
     transform-box: fill-box;
     transform-origin: center;
     animation: cell-in 460ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 28ms);
   }
 
-  .charts-grid.reveal-marks .heat-label {
+  .chart-panel.is-revealed .heat-label {
     animation: fade-in 300ms var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 28ms + 120ms);
   }
 
-  .charts-grid.reveal-marks .map-points {
+  .chart-panel.is-revealed .map-points {
     animation: fade-in 700ms var(--ease-out) both;
   }
 }
@@ -1795,6 +1795,9 @@ footer {
 
   .bar-screen { display: none; }
   .bar-print { display: inline; }
+
+  /* A panel revealed just before printing could be caught mid-entrance. */
+  .chart-panel.is-revealed * { animation: none !important; }
 
   body { background: #fff; }
 

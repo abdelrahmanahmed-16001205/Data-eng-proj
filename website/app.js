@@ -1006,6 +1006,28 @@ function summaryHtml(h, m, announce) {
 
 let revealedMarks = false;
 let reportAnnounced = false;
+let revealObserver = null;
+let pendingReveal = null;
+
+/* Marks animate the first time their panel reaches the viewport, not all at
+   once on load. One observer per first render, dropped on every later one: a
+   Generate is the crossfade only, and the data does not replay its entrance.
+   The top inset clears the sticky index: a row peeking out beneath it is not
+   on screen, and revealing it would spend its entrance behind the bar. */
+function revealOnScroll(panels) {
+  if (!('IntersectionObserver' in window)) {
+    panels.forEach(p => p.classList.add('is-revealed'));
+    return;
+  }
+  revealObserver = new IntersectionObserver((entries, obs) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('is-revealed');
+      obs.unobserve(e.target);
+    });
+  }, { rootMargin: '-64px 0px -8% 0px', threshold: 0 });
+  panels.forEach(p => revealObserver.observe(p));
+}
 
 function render() {
   if (!D.buildings) return;
@@ -1013,14 +1035,18 @@ function render() {
   const grid = $('#charts-grid');
   const h = houses();
   const m = meters();
+  const firstRender = !revealedMarks;
 
   grid.classList.add('is-swapping');
-  /* Chart marks animate on the first render only; every later render keeps the
-     140ms crossfade and nothing else. */
-  grid.classList.toggle('reveal-marks', !revealedMarks);
   revealedMarks = true;
+  revealObserver?.disconnect();
+  revealObserver = null;
   tables = [];
   grid.innerHTML = questions.map((_, i) => makeChart(i, h, m)).join('');
+  /* Observed after the boot scroll, not here: a fragment scroll starts as soon
+     as the target enters the DOM, and a smooth one would reveal every panel it
+     flies past. */
+  if (firstRender) pendingReveal = [...grid.querySelectorAll('.chart-panel')];
   grid.setAttribute('aria-busy', 'false');
 
   const summary = $('#report-summary');
@@ -1408,12 +1434,19 @@ Promise.all(files.map(loadCsv))
     setControlsReady(true);
 
     /* A cold deep link is not scrolled by the browser because the target did
-       not exist when the fragment was first resolved. */
+       not exist when the fragment was first resolved. Instant, not smooth: a
+       long flight would carry the target panel through the viewport and spend
+       its entrance before the reader arrives. */
     if (location.hash.length > 1) {
       let id = location.hash.slice(1);
       try { id = decodeURIComponent(id); } catch (err) { /* keep the raw value */ }
       const target = document.getElementById(id);
-      if (target) target.scrollIntoView({ block: 'start' });
+      if (target) target.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
+
+    if (pendingReveal) {
+      revealOnScroll(pendingReveal);
+      pendingReveal = null;
     }
   })
   .catch(e => {
