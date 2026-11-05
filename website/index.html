@@ -122,7 +122,26 @@
     <span id="export-status" class="export-status" role="status"></span>
   </div>
 
-  <h2 class="section-bar" id="views"><span class="bar-num">02</span> Twelve views</h2>
+  <h2 class="section-bar" id="compare"><span class="bar-num">02</span> Compare two boroughs</h2>
+  <section class="compare panel" aria-labelledby="compare">
+    <div class="compare-controls">
+      <div class="control-field">
+        <label for="cmp-a">Borough A</label>
+        <select id="cmp-a"></select>
+      </div>
+      <button type="button" class="swap-btn" id="cmp-swap" aria-label="Swap the two boroughs">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path d="M7 20V4m0 0L4 7m3-3 3 3M17 4v16m0 0 3-3m-3 3-3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="control-field">
+        <label for="cmp-b">Borough B</label>
+        <select id="cmp-b"></select>
+      </div>
+    </div>
+    <p class="compare-scope">Full borough totals. The filters above do not apply.</p>
+    <div id="compare-body" class="compare-body"></div>
+  </section>
+
+  <h2 class="section-bar" id="views"><span class="bar-num">03</span> Twelve views</h2>
   <p class="views-hint">On a narrow screen each chart scrolls sideways. Every chart also has a data table with the same numbers.</p>
   <nav class="chart-index" id="chart-index" aria-label="Jump to a chart"></nav>
   <section id="charts-grid" class="charts-grid" aria-busy="true">
@@ -148,7 +167,7 @@
     </article>
   </section>
 
-  <h2 class="section-bar" id="method"><span class="bar-num">03</span> How the two datasets were joined</h2>
+  <h2 class="section-bar" id="method"><span class="bar-num">04</span> How the two datasets were joined</h2>
   <section class="method panel" aria-labelledby="method">
     <div class="method-grid">
       <div class="method-copy">
@@ -194,7 +213,7 @@
     </div>
   </section>
 
-  <h2 class="section-bar" id="story"><span class="bar-num">04</span> The story</h2>
+  <h2 class="section-bar" id="story"><span class="bar-num">05</span> The story</h2>
   <section class="story panel" aria-labelledby="story-title">
     <h3 id="story-title">A geographic association, not a cause</h3>
     <p class="story-lede">The project links housing records and meter locations with a square-grid proximity window because the two datasets share no direct identifier. The results can point to patterns worth a closer look; they cannot show that meters cause housing development, or that housing changes meter availability.</p>
@@ -229,7 +248,7 @@
     </div>
   </section>
 
-  <h2 class="section-bar" id="team"><span class="bar-num">05</span> Team</h2>
+  <h2 class="section-bar" id="team"><span class="bar-num">06</span> Team</h2>
   <section class="team panel" aria-labelledby="team-title">
     <h3 id="team-title">Six members, one pipeline</h3>
     <p class="team-lede">Each member owned two of the twelve research questions, plus one part of the cleaning, integration or front-end work.</p>

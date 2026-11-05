@@ -367,7 +367,8 @@ main { padding-bottom: 56px; }
 
 .control-field { min-width: 0; }
 
-.controls label {
+.controls label,
+.compare-controls label {
   display: block;
   margin-bottom: 6px;
   font: 600 13px/1.4 var(--sans);
@@ -375,7 +376,8 @@ main { padding-bottom: 56px; }
 }
 
 .controls select,
-.controls input {
+.controls input,
+.compare-controls select {
   width: 100%;
   min-height: 44px;
   padding: 10px 11px;
@@ -387,7 +389,8 @@ main { padding-bottom: 56px; }
 }
 
 .controls select:hover,
-.controls input:hover { border-color: var(--note); }
+.controls input:hover,
+.compare-controls select:hover { border-color: var(--note); }
 
 .search-control { grid-column: span 2; }
 
@@ -951,6 +954,200 @@ main { padding-bottom: 56px; }
   color: var(--note);
 }
 
+/* ---------- Borough comparison ---------- */
+
+.compare {
+  padding: 20px;
+  border-top: 3px solid var(--rule);
+}
+
+.compare-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: end;
+  max-width: 540px;
+}
+
+.compare-controls .control-field { min-width: 0; }
+
+.compare-scope {
+  margin: 10px 0 0;
+  font: 400 12px/1.45 var(--sans);
+  color: var(--note);
+}
+
+.swap-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--chart-ground);
+  border: 1px solid var(--input-border);
+  border-radius: 2px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease,
+              border-color var(--dur-fast) ease,
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.swap-btn:hover {
+  background: var(--paper);
+  border-color: var(--ink);
+}
+
+.swap-btn:active { transform: scale(.97); }
+
+/* The arrow glyph is symmetric under 180°, so the reset after the animation
+   is invisible and a second press turns the same way. */
+@keyframes swap-turn {
+  from { transform: rotate(0); }
+  to { transform: rotate(180deg); }
+}
+
+.swap-btn.is-flipping svg { animation: swap-turn 220ms var(--ease-out); }
+
+.cmp-sign {
+  margin-top: 18px;
+  padding: 16px 20px 18px;
+  background: var(--sign-bg);
+  color: var(--sign-ink);
+  border: 3px solid var(--rule);
+  border-radius: 2px;
+}
+
+.cmp-sign .sign-num { font-size: clamp(38px, 4.6vw, 54px); }
+.cmp-sign .sign-label { margin-top: 6px; }
+
+.cmp-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 10px 0 0;
+  font: 500 12.5px/1.4 var(--mono);
+  letter-spacing: .04em;
+  color: var(--sign-note);
+}
+
+.cmp-rows {
+  margin-top: 20px;
+  display: grid;
+  gap: 0 36px;
+}
+
+@media (min-width: 1000px) {
+  .cmp-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.cmp-row {
+  padding: 11px 0 13px;
+  border-top: 1px solid var(--hair-pale);
+}
+
+.cmp-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+}
+
+.cmp-label {
+  margin: 0;
+  font: 600 13px/1.35 var(--sans);
+  color: var(--body);
+}
+
+.cmp-ratio {
+  flex: none;
+  font: 500 11px/1.4 var(--mono);
+  letter-spacing: .05em;
+  color: var(--note);
+}
+
+.cmp-line {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.cmp-name {
+  font: 500 11px/1.4 var(--mono);
+  letter-spacing: .04em;
+  color: var(--note);
+}
+
+.cmp-track {
+  height: 12px;
+  background: var(--chart-ground);
+  border: 1px solid var(--hair-pale);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.cmp-fill {
+  display: block;
+  width: calc(var(--v, 0) * 100%);
+  height: 100%;
+  transform-origin: left center;
+}
+
+.cmp-fill--a { background: var(--green); }
+.cmp-fill--b { background: var(--soft); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .cmp-fill {
+    animation: grow-right 320ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
+}
+
+.cmp-val {
+  font: 500 12px/1.4 var(--mono);
+  text-align: right;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 400 12px/1.45 var(--mono);
+}
+
+.cmp-table th,
+.cmp-table td {
+  padding: 6px 9px;
+  text-align: right;
+  border-bottom: 1px solid var(--hair-pale);
+  white-space: nowrap;
+}
+
+.cmp-table th:first-child,
+.cmp-table td:first-child {
+  text-align: left;
+  white-space: normal;
+}
+
+.cmp-table thead th {
+  background: var(--paper);
+  color: var(--note);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.cmp-table caption {
+  padding: 8px 9px;
+  text-align: left;
+  font: 400 12px/1.5 var(--sans);
+  color: var(--note);
+}
+
 /* ---------- Method ---------- */
 
 .method {
@@ -1418,6 +1615,7 @@ footer {
   .btn-primary,
   .btn-ghost,
   .theme-toggle,
+  .swap-btn,
   .chip {
     transition: background-color var(--dur-fast) ease,
                 border-color var(--dur-fast) ease,
@@ -1427,7 +1625,10 @@ footer {
   .btn-primary:active,
   .btn-ghost:active,
   .theme-toggle:active,
+  .swap-btn:active,
   .chip:active { transform: none; }
+
+  .swap-btn svg { animation: none !important; }
 
   .hero-top,
   h1,
@@ -1492,6 +1693,7 @@ footer {
   .theme-toggle,
   .chart-index,
   .controls,
+  .compare-controls,
   .report-actions,
   .search-examples,
   .skip-link,
@@ -1513,6 +1715,11 @@ footer {
     margin: 0 0 12px;
     padding: 12px 14px 14px;
     border: 1px solid var(--hair);
+  }
+
+  .compare {
+    break-inside: avoid;
+    padding: 14px 16px 16px;
   }
 
   /* Shorter charts let two panels share a sheet instead of one per page. */
@@ -1556,6 +1763,10 @@ footer {
 @media (max-width: 640px) {
   .hero-inner, main, footer { padding-left: 18px; padding-right: 18px; }
   .views-hint { display: block; }
+  .compare { padding: 16px; }
+  .cmp-line { grid-template-columns: 76px minmax(0, 1fr) 66px; gap: 8px; }
+  .cmp-name { font-size: 10px; }
+  .cmp-val { font-size: 11px; }
   .chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .chart svg { width: 620px; height: auto; }
   .chart-heading h3 { font-size: 19px; }
@@ -1569,6 +1780,11 @@ footer {
 
 @media (max-width: 450px) {
   .controls { grid-template-columns: 1fr; }
+  .compare { padding: 14px; }
+  .compare-controls { grid-template-columns: minmax(0, 1fr); max-width: none; }
+  .compare-controls .control-field:first-child { grid-row: 1; }
+  .swap-btn { grid-row: 2; width: 100%; height: 38px; }
+  .compare-controls .control-field:last-child { grid-row: 3; }
   .hero-sign { padding: 16px; }
   .sign-label { font-size: 13px; }
   .method { padding: 18px; }

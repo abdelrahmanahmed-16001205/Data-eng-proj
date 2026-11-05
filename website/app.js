@@ -695,6 +695,161 @@ function makeChart(i, h, m) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Borough comparison
+ *
+ * A reference view, not a thirteenth question: it reads the totals in
+ * borough_summary.csv and ignores the filter panel, so a ratio always
+ * has one population on both sides.
+ * ------------------------------------------------------------------ */
+
+const COMPARE_DEFAULT = { a: 'QUEENS', b: 'BRONX' };
+
+let compareA = COMPARE_DEFAULT.a;
+let compareB = COMPARE_DEFAULT.b;
+
+const compareMetrics = [
+  ['affordable_units', 'Affordable units', v => v.toLocaleString(undefined, { maximumFractionDigits: 0 })],
+  ['buildings', 'Housing records', v => v.toLocaleString(undefined, { maximumFractionDigits: 0 })],
+  ['meters_active', 'Active meters', v => v.toLocaleString(undefined, { maximumFractionDigits: 0 })],
+  ['meters_per_1000_units', 'Active meters per 1,000 units', v => v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })],
+  ['share_near_meter', 'Records near an active meter', pct],
+  ['avg_meters_nearby', 'Active meters within the window, average', v => v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })]
+];
+
+const COMPARE_KEY_METRIC = 3;
+
+function boroughRow(name) {
+  return (D.borough || []).find(r => r.borough === name) || null;
+}
+
+function compareRatio(va, vb, nameA, nameB) {
+  if (va == null || vb == null || !(va > 0) || !(vb > 0)) return null;
+  return va >= vb ? { name: nameA, value: va / vb } : { name: nameB, value: vb / va };
+}
+
+function ratioText(v) {
+  return v >= 100 ? v.toFixed(0) : v.toFixed(1);
+}
+
+function compareBodyHtml(a, b) {
+  const ra = boroughRow(a);
+  const rb = boroughRow(b);
+  const val = (row, key) => (row ? N(row[key]) : null);
+
+  const keyMetric = compareMetrics[COMPARE_KEY_METRIC];
+  const ka = val(ra, keyMetric[0]);
+  const kb = val(rb, keyMetric[0]);
+  const keyRatio = compareRatio(ka, kb, a, b);
+
+  /* The number is always the larger over the smaller, so the sentence has to
+     name the leader or a swap leaves it pointing at nothing. */
+  const lead = keyRatio ? keyRatio.name : null;
+  const trail = keyRatio ? (lead === a ? b : a) : null;
+  const even = keyRatio && ratioText(keyRatio.value) === '1.0';
+
+  const signLabel = !keyRatio
+    ? 'active meters per 1,000 affordable units'
+    : even
+      ? `as many active meters per 1,000 affordable units in ${esc(lead)} as in ${esc(trail)}`
+      : `more active meters per 1,000 affordable units in ${esc(lead)} than in ${esc(trail)}`;
+
+  const sign =
+    `<div class="cmp-sign" aria-live="polite">` +
+      `<p class="sign-num">${keyRatio ? ratioText(keyRatio.value) + '×' : '–'}</p>` +
+      `<p class="sign-label">${signLabel}</p>` +
+      `<p class="cmp-pair"><span>${esc(a)} ${ka == null ? '–' : keyMetric[2](ka)}</span>` +
+      `<span>${esc(b)} ${kb == null ? '–' : keyMetric[2](kb)}</span></p>` +
+    `</div>`;
+
+  const rows = compareMetrics.map(([key, label, format], i) => {
+    const va = val(ra, key);
+    const vb = val(rb, key);
+    const max = Math.max(va || 0, vb || 0) || 1;
+    const ratio = compareRatio(va, vb, a, b);
+
+    const line = (name, v, cls) => {
+      const share = v == null ? 0 : Math.min(1, v / max);
+      return `<div class="cmp-line">` +
+        `<span class="cmp-name">${esc(name)}</span>` +
+        `<span class="cmp-track"><span class="cmp-fill cmp-fill--${cls}" style="--v:${share.toFixed(4)};--i:${i}"></span></span>` +
+        `<span class="cmp-val">${v == null ? '–' : format(v)}</span>` +
+      `</div>`;
+    };
+
+    return `<div class="cmp-row">` +
+      `<div class="cmp-row-head"><h3 class="cmp-label">${esc(label)}</h3>` +
+      (ratio
+        ? `<span class="cmp-ratio">${esc(ratio.name)} ${ratioText(ratio.value)}×<span class="sr-only"> the other borough</span></span>`
+        : '') +
+      `</div>` +
+      line(a, va, 'a') + line(b, vb, 'b') +
+    `</div>`;
+  }).join('');
+
+  const table =
+    `<details class="chart-data cmp-data"><summary>View data — 6 rows</summary>` +
+      `<div class="table-wrap"><table class="cmp-table">` +
+        `<caption>Borough totals behind the comparison.</caption>` +
+        `<thead><tr><th scope="col">Metric</th><th scope="col">${esc(a)}</th><th scope="col">${esc(b)}</th></tr></thead>` +
+        `<tbody>${compareMetrics.map(([key, label, format]) => {
+          const va = val(ra, key);
+          const vb = val(rb, key);
+          return `<tr><td>${esc(label)}</td><td>${va == null ? '–' : format(va)}</td><td>${vb == null ? '–' : format(vb)}</td></tr>`;
+        }).join('')}</tbody>` +
+      `</table></div>` +
+    `</details>`;
+
+  return sign + `<div class="cmp-rows">${rows}</div>` + table;
+}
+
+function renderCompare() {
+  if (!D.borough || !D.borough.length) return;
+
+  const a = $('#cmp-a');
+  const b = $('#cmp-b');
+
+  if (!a.options.length) {
+    const options = D.borough
+      .map(r => `<option value="${esc(r.borough)}">${esc(r.borough)}</option>`)
+      .join('');
+    a.innerHTML = options;
+    b.innerHTML = options;
+  }
+
+  a.value = compareA;
+  b.value = compareB;
+
+  /* A and B can never be the same borough, so the other select disables it. */
+  [...a.options].forEach(o => { o.disabled = o.value === compareB; });
+  [...b.options].forEach(o => { o.disabled = o.value === compareA; });
+
+  $('#compare-body').innerHTML = compareBodyHtml(compareA, compareB);
+  writeUrl();
+}
+
+$('#cmp-a').addEventListener('change', e => {
+  compareA = e.target.value;
+  renderCompare();
+});
+
+$('#cmp-b').addEventListener('change', e => {
+  compareB = e.target.value;
+  renderCompare();
+});
+
+$('#cmp-swap').addEventListener('click', () => {
+  const held = compareA;
+  compareA = compareB;
+  compareB = held;
+
+  const button = $('#cmp-swap');
+  button.classList.add('is-flipping');
+  setTimeout(() => button.classList.remove('is-flipping'), 240);
+
+  renderCompare();
+});
+
+/* ------------------------------------------------------------------ *
  * Chart index
  * ------------------------------------------------------------------ */
 
@@ -807,6 +962,8 @@ function writeUrl() {
   if (applied.construction !== 'ALL') p.set('construction', applied.construction);
   if (applied.status !== 'ALL') p.set('status', applied.status);
   if (applied.term) p.set('q', applied.term);
+  if (compareA !== COMPARE_DEFAULT.a) p.set('a', compareA);
+  if (compareB !== COMPARE_DEFAULT.b) p.set('b', compareB);
   const qs = p.toString();
   try {
     history.replaceState(null, '', qs ? '?' + qs : location.pathname);
@@ -823,6 +980,15 @@ function readUrl() {
   pick('year', $('#year'));
   pick('construction', $('#construction'));
   pick('status', $('#status'));
+
+  /* The comparison pair only accepts boroughs in the data, and never the same one twice. */
+  const names = (D.borough || []).map(r => r.borough);
+  const qa = names.includes(p.get('a')) ? p.get('a') : null;
+  const qb = names.includes(p.get('b')) ? p.get('b') : null;
+  if (qa && qb && qa !== qb) { compareA = qa; compareB = qb; }
+  else if (qa && qa !== compareB) { compareA = qa; }
+  else if (qb && qb !== compareA) { compareB = qb; }
+
   const q = p.get('q');
   if (q) $('#search').value = q;
 }
@@ -1119,11 +1285,13 @@ Promise.all(files.map(async f => [f, csv(await (await fetch(`../Data/${f}.csv`))
     $('#load-status').textContent = 'Data ready · select filters or search, then generate a report';
     parseSearch();
     render();
+    renderCompare();
   })
   .catch(e => {
     $('#load-status').textContent = 'Unable to load CSVs. Start the server from the project root as described in README.';
     $('#charts-grid').innerHTML = '<div class="panel empty">The dashboard needs access to the CSV files in the Data folder.</div>';
     $('#charts-grid').setAttribute('aria-busy', 'false');
+    $('#compare-body').innerHTML = '<p class="empty">The comparison needs the CSV files in the Data folder.</p>';
     console.error(e);
   });
 

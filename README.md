@@ -126,6 +126,9 @@ Every answer is discussed with its limitations in the final notebook section.
 
 ## Dashboard
 
+- **Compare two boroughs** sits above the twelve views. Pick any pair, see six borough totals side by side,
+  and read the ratio on active meters per 1,000 affordable units. It reads `Data/borough_summary.csv` and
+  ignores the filter panel, so both sides of every ratio cover the same population.
 - Four dropdown filters (borough, completion year, construction type, meter status) and a search field
   that recognises the same categories, with example queries one click away.
 - **Generate report** re-renders all twelve charts with the current filters; **Reset** clears them.
@@ -135,10 +138,13 @@ Every answer is discussed with its limitations in the final notebook section.
 - A sticky chart index, a light/dark switch that follows the operating system until you choose one, and
   a story section with the question, key findings, limitations and the case for the analysis.
 - A sortable data table under every chart, filled on first open, holding the same numbers the chart draws.
-- CSV export of the filtered housing or meter rows, **Copy link** (which puts the current filters in the
-  URL so a view can be reopened or shared), and **Print / PDF** for a paper copy.
+- CSV export of the filtered housing or meter rows, **Copy link** (which puts the current filters and the
+  comparison pair in the URL so a view can be reopened or shared), and **Print / PDF** for a paper copy.
 - Keyboard support: skip link, visible focus, `/` to jump to search, `Esc` to leave it, and chart
   containers that become focusable only when they scroll sideways.
+
+The address bar carries the state: `borough`, `year`, `construction`, `status` and `q` for the filters,
+`a` and `b` for the comparison pair. Only values that differ from the default are written.
 
 The dashboard redraws the notebook’s twelve questions by hand in SVG, so the page needs neither a plotting
 library nor a build step. Five charts change type. Q2 becomes a heatmap of borough against completion year,
