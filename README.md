@@ -8,6 +8,33 @@ capacity, or historical meter availability.
 - **Live dashboard:** <https://abdelrahmanahmed-16001205.github.io/Data-eng-proj/>
 - **Repository:** <https://github.com/abdelrahmanahmed-16001205/Data-eng-proj>
 
+## Quick start
+
+### Run the notebook
+
+Requires Python 3.10 or newer and an internet connection, because both source datasets are downloaded
+from NYC Open Data on every run.
+
+```powershell
+pip install -r requirements.txt
+jupyter lab Milestone1_FINAL_SUBMISSION_REVIEWED.ipynb
+```
+
+Run all cells top to bottom. This regenerates every figure, the association-statistics table and all
+five CSVs in `Data/`. The figures are saved as PNG outputs, so they render in Jupyter, VS Code, Colab
+and the GitHub preview without a plotting library or a CDN script.
+
+### Run the dashboard
+
+From the project root:
+
+```powershell
+python -m http.server 8000
+```
+
+Open <http://localhost:8000/website/>. The server is required: opening `website/index.html` straight
+from the filesystem blocks the CSV fetches. If `python` is not on PATH, use the installed executable.
+
 ## Repository layout
 
 | Path | Contents |
@@ -21,33 +48,6 @@ capacity, or historical meter availability.
 | `requirements.txt` | Python packages the notebook needs. |
 | `*.xlsx` | Field dictionaries published with the two source datasets. |
 
-## Quick start
-
-### The notebook
-
-Requires Python 3.10 or newer and an internet connection, because the two source datasets are
-downloaded from NYC Open Data on every run.
-
-```powershell
-pip install -r requirements.txt
-jupyter lab Milestone1_FINAL_SUBMISSION_REVIEWED.ipynb
-```
-
-Run all cells top to bottom. This regenerates every figure, the statistics table and all five CSVs in
-`Data/`. The figures are saved as PNG outputs, so they render in Jupyter, VS Code, Colab and the GitHub
-preview without any plotting library or CDN script.
-
-### The dashboard
-
-From the project root:
-
-```powershell
-python -m http.server 8000
-```
-
-Open <http://localhost:8000/website/>. The server is required: opening `website/index.html` straight
-from the filesystem blocks the CSV fetches. If `python` is not on PATH, use the installed executable.
-
 ## Data
 
 1. **Affordable Housing Production by Building (HPD)** — NYC Open Data ID `hg8x-zxpr`:
@@ -55,10 +55,10 @@ from the filesystem blocks the CSV fetches. If `python` is not on PATH, use the 
 2. **Parking Meters Locations & Status (DOT)** — NYC Open Data ID `693u-uax6`:
    <https://data.cityofnewyork.us/Transportation/Parking-Meters-Locations-and-Status/693u-uax6>
 
-No source file is committed. The snapshot in `Data/` holds 9,551 housing records (51 columns after
-cleaning) and 15,592 unique meters (21 columns), pulled on 3 November 2026. Both datasets are live and
-change without notice, so a later run produces slightly different counts; re-running the notebook
-refreshes `Data/` from whatever NYC Open Data serves at that moment.
+No source file is committed. The snapshot in `Data/` was pulled on 5 November 2026 and holds 9,551
+housing records (51 columns after cleaning) and 15,592 unique meters (21 columns). Both datasets are
+live and change without notice, so a later run produces slightly different counts; re-running the
+notebook refreshes `Data/` from whatever NYC Open Data serves at that moment.
 
 ## Method
 
@@ -71,24 +71,31 @@ are near an active meter with a 2-cell reach, 75.7% with 3 cells and 87.8% with 
 Records without usable coordinates (1,958 housing records, 20.5%) are excluded from proximity shares
 rather than counted as "no meter nearby". A housing row is a dataset record, not necessarily a unique
 physical building. Meter status and location are a current snapshot, not a historical record matched to
-each completion date. A meter is not a parking space. Full detail, including every cleaning rule, is in
-[docs/method.md](docs/method.md).
+each completion date. A meter is not a parking space. Full detail, including every cleaning rule and
+the test behind each question, is in [docs/method.md](docs/method.md).
 
 ## Key findings
+
+All twelve answers come from one recorded run of the notebook. The association statistics are weak
+(largest absolute Spearman rho 0.22), so these are screening results, not causal claims.
 
 | Question | Result from the recorded run |
 |---|---|
 | Q1 | Active meters per 1,000 affordable units: Queens 80.8, Manhattan 53.3, Staten Island 44.8, Brooklyn 40.4, Bronx 13.2. |
 | Q2 | Share of records near an active meter runs from 53.6% (2016) to 87.6% (2015); every year from 2020 on is above 78%. |
-| Q3 | New construction sits near a median of 9 active meters against 7 for preservation (Mann-Whitney, p < 0.001). |
+| Q3 | New construction sits near a median of 9 active meters against 7 for preservation (Mann-Whitney, p = 2.6 × 10⁻⁶). |
+| Q4 | Larger three-bedroom-plus shares go with slightly fewer nearby meters (rho = −0.18). |
+| Q5 | Only the middle-income band has a non-trivial correlation (rho = +0.16); extremely-low income is indistinguishable from zero (p = 0.43). |
+| Q6 | New affordable units and average nearby meters per community board: rho = −0.22 over 59 boards (p = 0.10), not distinguishable from no relationship. |
 | Q7 | 75.7% of geocoded housing records have an active meter in the window; 77.2% of meters have affordable housing in theirs. |
-| Q8 | Inactive meters are slightly **more** common near new housing (18.4%) than elsewhere (16.4%). |
-| Q10 | Two-hour limits dominate both groups, but three-hour limits are more common near housing (16.9% vs 11.2%). |
-| Q12 | Median 429 days from project start to completion with a nearby meter, 628 days without (p = 0.001). |
+| Q8 | Inactive meters are slightly **more** common near new housing (18.4%) than elsewhere (16.4%); chi-square p = 0.002. |
+| Q9 | Larger buildings sit near slightly more meters (rho = +0.17), consistent with a density effect. |
+| Q10 | Two-hour limits dominate both groups, but three-hour limits are more common near housing (16.9% vs 11.2%); chi-square p = 1.6 × 10⁻²². |
+| Q11 | A higher affordable-unit share goes with fewer nearby meters (rho = −0.20). |
+| Q12 | Median 429 days from project start to completion with a nearby meter, 628 days without (Mann-Whitney, p = 0.001). |
 
-All twelve answers, the association statistics behind them and the limitations are in the final two
-sections of the notebook. The associations are weak: the largest absolute Spearman rho at record level
-is 0.20, so these are screening results, not causal claims.
+The full table of tests, with sample sizes and p-values, is printed by the association-statistics cell.
+Every answer is discussed with its limitations in the final notebook section.
 
 ## Dashboard
 

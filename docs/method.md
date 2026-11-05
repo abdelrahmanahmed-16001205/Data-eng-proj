@@ -1,7 +1,7 @@
 # Method
 
 The notebook is the reference implementation; this page explains the decisions behind it so a reader can
-judge the results without reading 32 code cells.
+judge the results without reading 43 code cells.
 
 ## 1. Sources
 
@@ -23,8 +23,9 @@ depend on capitalisation or on the spaces in names such as `Meter Number`.
 - Borough text is stripped and uppercased so it matches the meter file.
 - Exact duplicate rows are dropped. Records are **not** deduplicated by `building_id`, because a building
   that received more than one subsidy legitimately appears in more than one project. The cost of that
-  choice is measured: 247 records share a `building_id` with another project and carry 21,098 of the
-  320,946 counted units (6.6%), so unit totals can double-count those buildings.
+  choice is measured: 123 buildings appear in 247 project records, and those records carry 21,098 of the
+  320,946 counted units (6.6%). Most of that belongs to each building's first record, so counting every
+  building once instead removes only 1,154 units (0.36%).
 - `project_start_date` and `building_completion_date` are parsed with `errors='coerce'`; invalid dates
   become missing. `completion_year` is kept only inside 2014 to the current year, because the dataset
   starts in 2014. `duration_days` is completion minus start, with negative values set to missing.
@@ -98,8 +99,13 @@ The charts show shape; one cell puts a number on each comparison.
 | Mann-Whitney U | Q3, Q12 | Two groups, a skewed count and a skewed duration; a mean difference would be led by the tail. |
 | Chi-square | Q8, Q10 | Two categorical variables in a contingency table. |
 
+Q8's table has a third status, `UNKNOWN`, that holds 36 of 15,592 meters. It is shown in the chart but
+left out of the test, because expected counts that small make the chi-square statistic unreliable; the
+test therefore compares ACTIVE against INACTIVE only (p = 0.002). Q10 uses all five time-limit groups
+(p = 1.6 × 10⁻²²).
+
 With about 7,500 records almost any difference is significant, so the size of the statistic matters more
-than the p-value. Every record-level association is weak: |rho| between 0.17 and 0.20. Q2 has only 13
+than the p-value. Every record-level association is weak: |rho| between 0.16 and 0.20. Q2 has only 13
 yearly points (p = 0.12) and Q6 has 59 community boards (p = 0.10), so neither reaches significance even
 though both are reported.
 
@@ -109,8 +115,8 @@ though both are reported.
 - **Capacity.** A meter is not a parking space, and occupancy, price and demand are not in either file.
 - **History.** Meter locations and status are today's snapshot; a 2015 building is compared with 2026
   meters.
-- **Unique buildings.** A housing row is a dataset record. 247 of them share a building ID across
-  projects.
+- **Unique buildings.** A housing row is a dataset record. 123 buildings appear in 247 project records,
+  which double-counts 1,154 counted units (0.36%) against counting each building once.
 - **Distance.** The window is a square approximation. A true radius or a network distance would give
   different shares.
 - **Missing coordinates.** 20.5% of housing records cannot be placed, so they are excluded from proximity

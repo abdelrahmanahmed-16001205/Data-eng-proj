@@ -23,7 +23,7 @@ the detail behind that page.
 
 ## Conventions used in this documentation
 
-- Numbers quoted in the docs come from the recorded run of the notebook against the 3 November 2026
+- Numbers quoted in the docs come from the recorded run of the notebook against the 5 November 2026
   snapshot: 9,551 housing records and 15,592 unique meters.
 - "Proximity window" always means the 7 × 7 cell window with `REACH = 3`, unless a different reach is
   named.

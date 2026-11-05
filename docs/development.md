@@ -5,13 +5,13 @@
 | Item | Value |
 |---|---|
 | Python | 3.10 or newer (the recorded run used 3.14) |
-| Packages | `pandas>=2.2`, `numpy>=1.26`, `matplotlib>=3.9`, `scipy>=1.11` |
+| Packages | `pandas>=2.2`, `numpy>=1.26`, `matplotlib>=3.9`, `scipy>=1.11`, `seaborn>=0.13` |
 | Install | `pip install -r requirements.txt` |
 | Internet | Required: both datasets are downloaded on every run |
 
 `matplotlib>=3.9` is a real floor, not a preference: the notebook calls `ax.boxplot(..., tick_labels=...)`,
-which older versions do not accept. `seaborn`, `plotly`, `nbconvert` and `kaleido` are not needed and are
-not used.
+which older versions do not accept. `seaborn` draws the five EDA figures; the twelve research-question
+figures use matplotlib directly. `plotly`, `nbconvert` and `kaleido` are not needed and are not imported.
 
 ## Running the notebook
 
@@ -35,10 +35,11 @@ Run all cells top to bottom. Two things to know before you do:
 3. Update any number quoted in the README, in `docs/method.md` and on the dashboard's story and method
    sections. They are written out, not computed at load time.
 
-Between the 3 November 2026 snapshot and a re-pull on the same day, 2 of 9,551 housing records changed
-their nearby-meter count (one meter moved) and the meter rows came back in a different order. Row counts,
-every borough ratio and every headline share were unchanged. Expect that scale of drift for a re-run days
-later, and a larger drift for a re-run months later.
+The committed snapshot was re-pulled on 5 November 2026, two days after the first one. Two of the 9,551
+housing records changed their nearby-meter count (one meter moved) and the meter rows came back in a
+different order, which changes which of the six duplicate `meter_number` rows is kept. Row counts, every
+borough ratio and every headline share were unchanged. Expect that scale of drift for a re-run days later,
+and a larger drift for a re-run months later.
 
 ## Verification
 
