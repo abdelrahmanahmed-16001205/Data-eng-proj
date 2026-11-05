@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>NYC Housing &amp; Curbside — affordable housing and parking meters</title>
 <meta name="description" content="An exploratory dashboard linking 9,551 NYC affordable housing records to 15,592 parking meter locations through a 7×7 grid proximity window.">
 <meta name="author" content="GIU Data Engineering and Visualization, Winter 2026">
@@ -63,7 +64,7 @@
 
     <div class="hero-body">
       <div class="hero-sign">
-        <p class="sign-num">75.7%</p>
+        <p class="sign-num"><span data-count="75.7" data-decimals="1">75.7</span>%</p>
         <p class="sign-label">of housing records with usable coordinates have an active parking meter within a 7&thinsp;×&thinsp;7 grid window — roughly 300 to 400 metres</p>
       </div>
       <div class="hero-copy">
@@ -73,10 +74,10 @@
     </div>
 
     <dl class="stats">
-      <div><dt>Housing records</dt><dd>9,551</dd></div>
-      <div><dt>Meter records</dt><dd>15,592</dd></div>
-      <div><dt>Meters per 1,000 units</dt><dd>81&thinsp;:&thinsp;13</dd></div>
-      <div><dt>Matched to a meter</dt><dd>75.7%</dd></div>
+      <div><dt>Housing records</dt><dd><span data-count="9551">9,551</span></dd></div>
+      <div><dt>Meter records</dt><dd><span data-count="15592">15,592</span></dd></div>
+      <div><dt>Meters per 1,000 units</dt><dd><span data-count="81">81</span>&thinsp;:&thinsp;<span data-count="13">13</span></dd></div>
+      <div><dt>Matched to a meter</dt><dd><span data-count="75.7" data-decimals="1">75.7</span>%</dd></div>
     </dl>
   </div>
 </header>
@@ -100,7 +101,13 @@
       <button id="reset" class="btn-ghost" type="button">Reset</button>
     </div>
 
-    <p id="search-hint">Recognises borough, year, construction type and meter status.</p>
+    <p id="search-hint">Recognises borough, year, construction type and meter status. Press <kbd>/</kbd> to jump here.</p>
+    <div class="search-examples">
+      <span class="search-examples-label">Try</span>
+      <button type="button" class="chip" data-query="Brooklyn 2022 new buildings">Brooklyn 2022 new buildings</button>
+      <button type="button" class="chip" data-query="Inactive meters in Queens">Inactive meters in Queens</button>
+      <button type="button" class="chip" data-query="Preservation in the Bronx">Preservation in the Bronx</button>
+    </div>
     <p id="stale-note" class="stale-note" hidden>Filters changed — generate a report to update the charts.</p>
     <p id="load-status" class="load-status" role="status">Loading project data…</p>
   </section>
@@ -111,13 +118,35 @@
     <button type="button" class="btn-ghost btn-small" id="download-housing">Housing CSV</button>
     <button type="button" class="btn-ghost btn-small" id="download-meters">Meters CSV</button>
     <button type="button" class="btn-ghost btn-small" id="copy-link">Copy link</button>
+    <button type="button" class="btn-ghost btn-small" id="print-report">Print / PDF</button>
     <span id="export-status" class="export-status" role="status"></span>
   </div>
 
   <h2 class="section-bar" id="views"><span class="bar-num">02</span> Twelve views</h2>
   <p class="views-hint">On a narrow screen each chart scrolls sideways. Every chart also has a data table with the same numbers.</p>
   <nav class="chart-index" id="chart-index" aria-label="Jump to a chart"></nav>
-  <section id="charts-grid" class="charts-grid"></section>
+  <section id="charts-grid" class="charts-grid" aria-busy="true">
+    <article class="panel chart-panel skeleton" aria-hidden="true">
+      <span class="sk-line sk-line--tab"></span>
+      <span class="sk-line sk-line--title"></span>
+      <span class="sk-line sk-line--chart"></span>
+    </article>
+    <article class="panel chart-panel skeleton" aria-hidden="true">
+      <span class="sk-line sk-line--tab"></span>
+      <span class="sk-line sk-line--title"></span>
+      <span class="sk-line sk-line--chart"></span>
+    </article>
+    <article class="panel chart-panel skeleton" aria-hidden="true">
+      <span class="sk-line sk-line--tab"></span>
+      <span class="sk-line sk-line--title"></span>
+      <span class="sk-line sk-line--chart"></span>
+    </article>
+    <article class="panel chart-panel skeleton" aria-hidden="true">
+      <span class="sk-line sk-line--tab"></span>
+      <span class="sk-line sk-line--title"></span>
+      <span class="sk-line sk-line--chart"></span>
+    </article>
+  </section>
 
   <h2 class="section-bar" id="method"><span class="bar-num">03</span> How the two datasets were joined</h2>
   <section class="method panel" aria-labelledby="method">
@@ -182,10 +211,10 @@
         <li>Meter coverage is uneven across the city: Queens has 81 active meters per 1,000 affordable units and Manhattan 53, against 13 in the Bronx and 40 in Brooklyn &mdash; a six-fold spread from a single method.</li>
         <li>The yearly share of housing records near an active meter rose from 66% in 2014 to 78&ndash;85% since 2020, with a dip to 54% in 2016.</li>
         <li>New construction records sit slightly closer to meters than preservation records: a median of 9 nearby active meters against 7.</li>
-        <li>Community Board BK-05 has the most new affordable units in the data (10,744) and an average of 1 meter nearby; BX-01 has 6,842 units and 10.8 meters.</li>
+        <li>Community Board BK-05 has the most new affordable units in the data (10,744) but an average of only 0.7 meters nearby; BX-01 has 6,842 units and 11.6 meters.</li>
         <li>Meters near new affordable housing are slightly more likely to be inactive: 18.4% against 16.4% elsewhere.</li>
-        <li>The scatter views show only weak associations: record size against nearby meters r = 0.08, affordable-unit share r = &minus;0.16, three-bedroom share r = &minus;0.15.</li>
-        <li>Records without a meter nearby have a longer median project duration (628 days) than records with one (429 days), but 36% of duration values are zero because start and completion dates match, so this comparison is fragile.</li>
+        <li>The scatter views show only weak rank associations: record size against nearby meters rho = +0.17, affordable-unit share rho = &minus;0.20, three-bedroom share rho = &minus;0.18.</li>
+        <li>Records without a meter nearby have a longer median project duration (628 days) than records with one (429 days), but a quarter of the records in that comparison (25.3%) have a zero-day duration because start and completion dates match, so this comparison is fragile.</li>
       </ul>
     </div>
 
@@ -236,18 +265,18 @@
 <footer>
   <div class="footer-main">
     <p><strong>GIU</strong> · Data Engineering and Visualization · Milestone 1 · Winter 2026</p>
-    <p>Snapshot: the integrated exports committed to the repository on 3 November 2026. Source: NYC Open Data —
+    <p>Snapshot: the integrated exports committed to the repository on 5 November 2026. Source: NYC Open Data —
       <a href="https://data.cityofnewyork.us/Housing-Development/Affordable-Housing-Production-by-Building/hg8x-zxpr">HPD affordable housing <span class="mono">hg8x-zxpr</span></a> and
       <a href="https://data.cityofnewyork.us/Transportation/Parking-Meters-Locations-and-Status/693u-uax6">DOT parking meters <span class="mono">693u-uax6</span></a>.</p>
   </div>
   <nav class="footer-links" aria-label="Project links">
-    <a href="https://github.com/abdelrahmanahmed-16001205/Data-eng-proj/blob/main/Milestone1_FINAL_SUBMISSION_REVIEWED.ipynb">Notebook</a>
+    <a href="https://github.com/abdelrahmanahmed-16001205/Data-eng-proj/blob/main/analysis.ipynb">Notebook</a>
     <a href="https://github.com/abdelrahmanahmed-16001205/Data-eng-proj">Repository</a>
     <a href="https://github.com/abdelrahmanahmed-16001205/Data-eng-proj/blob/main/README.md">README</a>
   </nav>
 </footer>
 
 <script src="borough-paths.js"></script>
-<script src="app-final.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

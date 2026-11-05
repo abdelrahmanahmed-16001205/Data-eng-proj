@@ -11,6 +11,9 @@ opencode.json
 # samples). Nothing in the analysis reads it.
 sample_data/
 
+# Working notes, audits and plans. Kept locally, not part of the submission.
+docs/
+
 # Python
 __pycache__/
 *.py[cod]

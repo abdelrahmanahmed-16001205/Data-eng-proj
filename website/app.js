@@ -139,8 +139,8 @@ function meters() {
  * SVG primitives
  * ------------------------------------------------------------------ */
 
-function axes(title, xlabel, ylabel) {
-  return `<svg viewBox="0 0 820 350" role="img" aria-label="${esc(title)}">` +
+function axes(title, xlabel, ylabel, cls = '') {
+  return `<svg${cls ? ` class="${cls}"` : ''} viewBox="0 0 820 350" role="img" aria-label="${esc(title)}">` +
     `<text class="axis-label" x="420" y="346" text-anchor="middle">${esc(xlabel)}</text>` +
     `<text class="axis-label" transform="translate(15 180) rotate(-90)" text-anchor="middle">${esc(ylabel)}</text>`;
 }
@@ -168,9 +168,11 @@ function bars(labels, values, title, xlabel, ylabel, percent = false) {
     const cut = v => (v.length > budget ? v.slice(0, budget - 1) + '…' : v);
     const dense = labels.length > 5;
     const lines = dense && String(l).includes(' · ') ? String(l).split(' · ') : [String(l)];
-    s += `<rect class="bar" x="${x}" y="${303 - h}" width="${w}" height="${h}" rx="3">` +
+    s += `<g class="bar-col" style="--i:${i}">` +
+      `<rect class="bar" x="${x}" y="${303 - h}" width="${w}" height="${h}" rx="3">` +
       `<title>${esc(l)}: ${values[i].toLocaleString(undefined, { maximumFractionDigits: 2 })}${percent ? '%' : ''}</title></rect>` +
-      lines.map((v, j) => `<text class="tick" x="${x + w / 2}" y="${lines.length > 1 ? 313 + j * 14 : 319}" text-anchor="middle">${esc(cut(v))}</text>`).join('');
+      lines.map((v, j) => `<text class="tick" x="${x + w / 2}" y="${lines.length > 1 ? 313 + j * 14 : 319}" text-anchor="middle">${esc(cut(v))}</text>`).join('') +
+      `</g>`;
   });
   return s + '</svg>';
 }
@@ -184,7 +186,7 @@ function barsH(labels, values, title, xlabel, percent = false) {
   const barMax = right - left;
   const height = top + labels.length * (rowH + rowGap) - rowGap + foot;
   const alt = labels.map((l, i) => `${l}: ${values[i].toLocaleString(undefined, { maximumFractionDigits: 2 })}${percent ? '%' : ''}`).join('; ');
-  let s = `<svg viewBox="0 0 820 ${height}" role="img" aria-label="${esc(title + (alt ? ' — ' + alt : ''))}">`;
+  let s = `<svg class="bars-h" viewBox="0 0 820 ${height}" role="img" aria-label="${esc(title + (alt ? ' — ' + alt : ''))}">`;
   for (let j = 0; j <= 4; j++) {
     const x = left + barMax * j / 4;
     s += `<line class="gridline" x1="${x}" y1="${top - 10}" x2="${x}" y2="${height - foot + 4}"/>` +
@@ -194,10 +196,12 @@ function barsH(labels, values, title, xlabel, percent = false) {
     const y = top + i * (rowH + rowGap);
     const w = values[i] / mx * barMax;
     const val = values[i].toLocaleString(undefined, { maximumFractionDigits: 2 }) + (percent ? '%' : '');
-    s += `<text class="tick" x="${left - 12}" y="${y + rowH / 2 + 5}" text-anchor="end">${esc(l)}</text>` +
+    s += `<g class="bar-row" style="--i:${i}">` +
+      `<text class="tick" x="${left - 12}" y="${y + rowH / 2 + 5}" text-anchor="end">${esc(l)}</text>` +
       `<rect class="bar" x="${left}" y="${y}" width="${Math.max(w, 1).toFixed(1)}" height="${rowH}" rx="2">` +
       `<title>${esc(l + ': ' + val)}</title></rect>` +
-      `<text class="tick" x="${(left + w + 8).toFixed(1)}" y="${y + rowH / 2 + 5}">${esc(val)}</text>`;
+      `<text class="tick" x="${(left + w + 8).toFixed(1)}" y="${y + rowH / 2 + 5}">${esc(val)}</text>` +
+      `</g>`;
   });
   s += `<text class="axis-label" x="${(left + right) / 2}" y="${height - 8}" text-anchor="middle">${esc(xlabel)}</text>`;
   return s + '</svg>';
@@ -219,7 +223,7 @@ function scatter(rows, xk, yk, title, xlabel, ylabel, labelKey) {
   const X = x => 60 + (x - xmin) / (xmax - xmin) * 730;
   const Y = y => 302 - (y - ymin) / (ymax - ymin) * 250;
   const desc = `${pts.length.toLocaleString()} points plotted; ${xlabel} ${fmt(xmin)} to ${fmt(xmax)}; ${ylabel} ${fmt(ymin)} to ${fmt(ymax)}`;
-  let s = axes(title + ' — ' + desc, xlabel, ylabel);
+  let s = axes(title + ' — ' + desc, xlabel, ylabel, 'scatter');
   for (let i = 0; i < 5; i++) {
     const y = 45 + i * 64;
     s += `<line class="gridline" x1="60" y1="${y}" x2="796" y2="${y}"/>` +
@@ -230,8 +234,8 @@ function scatter(rows, xk, yk, title, xlabel, ylabel, labelKey) {
     const x = 60 + i * 182.5;
     s += `<text class="tick" x="${x}" y="317" text-anchor="middle">${fmt(xmin + (xmax - xmin) * i / 4)}</text>`;
   }
-  pts.forEach(p => {
-    s += `<circle class="dot" cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3">` +
+  pts.forEach((p, i) => {
+    s += `<circle class="dot" cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" style="--i:${i}">` +
       `<title>${esc((p[2] ? p[2] + ': ' : '') + Number(p[0].toFixed(2)) + ', ' + Number(p[1].toFixed(2)))}</title></circle>`;
   });
   return { svg: s + '</svg>', sampled: pts.length, total, points: pts };
@@ -268,12 +272,12 @@ function mapSvg(h, m, meterLabel) {
     s += '<g>' + NYC_BOROUGHS.map(b => `<path class="borough" d="${b.d}"/>`).join('') + '</g>';
   }
 
-  s += '<g>' + drawn.filter(p => p[2]).map(p => {
+  s += '<g class="map-points">' + drawn.filter(p => p[2]).map(p => {
     const cx = mapX(p[0]), cy = mapY(p[1]);
     return `<rect class="dot secondary" x="${(cx - 1.5).toFixed(1)}" y="${(cy - 1.5).toFixed(1)}" width="3" height="3"/>`;
   }).join('') + '</g>';
 
-  s += '<g>' + drawn.filter(p => !p[2]).map(p => {
+  s += '<g class="map-points">' + drawn.filter(p => !p[2]).map(p => {
     return `<circle class="dot" cx="${mapX(p[0]).toFixed(1)}" cy="${mapY(p[1]).toFixed(1)}" r="2.4"/>`;
   }).join('') + '</g>';
 
@@ -338,14 +342,14 @@ function heatmap(h) {
       const usable = c && c.valid >= HEAT_MIN_SAMPLE;
       const share = usable ? c.near / c.valid : null;
       const bucket = share === null ? 0 : heatBucket(share);
-      const fill = bucket ? `style="fill:var(--heat-${bucket})"` : 'style="fill:var(--heat-empty)"';
-      const ink = bucket ? `style="fill:var(--heat-${bucket}-ink)"` : 'style="fill:var(--note)"';
+      const fill = bucket ? `var(--heat-${bucket})` : 'var(--heat-empty)';
+      const ink = bucket ? `var(--heat-${bucket}-ink)` : 'var(--note)';
       const tip = c
         ? `${b} ${yr}: ${usable ? pct(share) + ' of ' + c.valid + ' usable records' : 'fewer than ' + HEAT_MIN_SAMPLE + ' usable records (' + c.valid + ')'}`
         : `${b} ${yr}: no housing records`;
-      s += `<rect class="heat-cell" x="${x}" y="${y}" width="${cw}" height="${ch}" rx="2" ${fill}>` +
+      s += `<rect class="heat-cell" x="${x}" y="${y}" width="${cw}" height="${ch}" rx="2" style="fill:${fill};--i:${i}">` +
         `<title>${esc(tip)}</title></rect>` +
-        `<text class="heat-label" x="${(x + cw / 2).toFixed(1)}" y="${y + ch / 2 + 4}" ${ink}>${share === null ? '–' : Math.round(share * 100) + '%'}</text>`;
+        `<text class="heat-label" x="${(x + cw / 2).toFixed(1)}" y="${y + ch / 2 + 4}" style="fill:${ink};--i:${i}">${share === null ? '–' : Math.round(share * 100) + '%'}</text>`;
     });
   });
 
@@ -357,9 +361,40 @@ function heatmap(h) {
  * Data table specs
  * ------------------------------------------------------------------ */
 
-function tableHtml(spec) {
-  const head = spec.head.map(h => `<th scope="col">${esc(h)}</th>`).join('');
-  const body = spec.rows.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('');
+/* Numbers arrive as formatted strings ("9,551", "75.7%", "BK-05"), so sorting
+   strips the formatting first and falls back to a numeric-aware text compare. */
+function sortValue(v) {
+  const s = String(v).replace(/[,\s%]/g, '');
+  const n = Number(s);
+  return s !== '' && Number.isFinite(n) ? n : null;
+}
+
+function tableHtml(spec, sort) {
+  const rows = spec.rows.slice();
+  let allNumeric = false;
+
+  if (sort) {
+    const col = sort.col;
+    allNumeric = rows.every(r => sortValue(r[col]) !== null);
+    rows.sort((a, b) => {
+      const av = allNumeric ? sortValue(a[col]) : String(a[col]);
+      const bv = allNumeric ? sortValue(b[col]) : String(b[col]);
+      let cmp;
+      if (av === null || bv === null) cmp = av === null ? 1 : -1;
+      else if (allNumeric) cmp = av - bv;
+      else cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
+      return sort.dir === 'desc' ? -cmp : cmp;
+    });
+  }
+
+  const head = spec.head.map((h, i) => {
+    const active = sort && sort.col === i;
+    const mark = active ? (sort.dir === 'asc' ? '↑' : '↓') : '↕';
+    return `<th scope="col" aria-sort="${active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">` +
+      `<button type="button" class="sort-btn${active ? ' is-sorted' : ''}" data-col="${i}">` +
+      `${esc(h)}<span class="sort-mark" aria-hidden="true">${mark}</span></button></th>`;
+  }).join('');
+  const body = rows.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('');
   return `<div class="table-wrap"><table><caption>${esc(spec.caption)}</caption>` +
     `<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
 }
@@ -730,6 +765,7 @@ function summaryHtml(h, m) {
   if (applied.construction !== 'ALL') parts.push(`<span>${esc(applied.construction)}</span>`);
   if (applied.status !== 'ALL') parts.push(`<span>${esc(applied.status)}</span>`);
   if (applied.term) parts.push(`<span>“${esc(applied.term)}”</span>`);
+  if (!h.length && !m.length) parts.push('<span class="summary-warn">Nothing matches these filters — reset to see the city again.</span>');
   return parts.join('');
 }
 
@@ -743,6 +779,7 @@ function render() {
   grid.classList.add('is-swapping');
   tables = [];
   grid.innerHTML = questions.map((_, i) => makeChart(i, h, m)).join('');
+  grid.setAttribute('aria-busy', 'false');
 
   $('#report-summary').innerHTML = summaryHtml(h, m);
   $('#load-status').textContent = 'Report generated from the integrated CSV exports.';
@@ -813,7 +850,10 @@ function parseSearch() {
   }
 
   const ym = rest.match(/\b(19|20)\d{2}\b/);
-  if (ym) { applied.year = ym[0]; rest = rest.replace(ym[0], ' '); }
+  if (ym && [...$('#year').options].some(o => o.value === ym[0])) {
+    applied.year = ym[0];
+    rest = rest.replace(ym[0], ' ');
+  }
 
   if (/new construction|new buildings|new build/.test(rest)) {
     applied.construction = 'New Construction';
@@ -903,6 +943,49 @@ $('#reset').addEventListener('click', () => {
   render();
 });
 
+document.querySelectorAll('.search-examples .chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    $('#search').value = chip.dataset.query;
+    parseSearch();
+    render();
+  });
+});
+
+$('#print-report').addEventListener('click', () => window.print());
+
+/* "/" jumps to search from anywhere; Escape leaves the field. */
+addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+  if (e.key === '/' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    e.preventDefault();
+    $('#search').focus();
+    $('#search').select();
+  } else if (e.key === 'Escape' && e.target === $('#search')) {
+    $('#search').blur();
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Sortable data tables
+ * ------------------------------------------------------------------ */
+
+$('#charts-grid').addEventListener('click', e => {
+  const button = e.target.closest('.sort-btn');
+  if (!button) return;
+  const details = button.closest('details.chart-data');
+  const spec = details && tables[Number(details.dataset.idx)];
+  if (!spec) return;
+
+  const col = Number(button.dataset.col);
+  const prev = details._sort;
+  const dir = prev && prev.col === col && prev.dir === 'asc' ? 'desc' : 'asc';
+  details._sort = { col, dir };
+
+  const wrap = details.querySelector('.table-wrap');
+  if (wrap) wrap.outerHTML = tableHtml(spec, details._sort);
+});
+
 /* ------------------------------------------------------------------ *
  * Theme
  * ------------------------------------------------------------------ */
@@ -963,10 +1046,59 @@ $('#charts-grid').addEventListener('toggle', e => {
 }, true);
 
 /* ------------------------------------------------------------------ *
+ * Hero count-up
+ * ------------------------------------------------------------------ */
+
+let countRun = 0;
+
+function countTarget(el) {
+  return Number(el.dataset.count);
+}
+
+function countText(el, v) {
+  const decimals = Number(el.dataset.decimals || 0);
+  return v.toLocaleString(undefined, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
+
+function settleCounts() {
+  countRun++;
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = countTarget(el);
+    if (Number.isFinite(target)) el.textContent = countText(el, target);
+  });
+}
+
+function countUp() {
+  const run = ++countRun;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = countTarget(el);
+    if (reduce || !Number.isFinite(target)) { el.textContent = countText(el, target); return; }
+
+    const duration = 900;
+    const start = performance.now();
+    const tick = now => {
+      if (run !== countRun) return;
+      const t = Math.min(1, (now - start) / duration);
+      el.textContent = countText(el, target * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+/* Printing mid-animation would put a half-counted figure on paper. */
+addEventListener('beforeprint', settleCounts);
+
+/* ------------------------------------------------------------------ *
  * Boot
  * ------------------------------------------------------------------ */
 
 buildIndex();
+countUp();
 
 Promise.all(files.map(async f => [f, csv(await (await fetch(`../Data/${f}.csv`)).text())]))
   .then(entries => {
@@ -991,6 +1123,7 @@ Promise.all(files.map(async f => [f, csv(await (await fetch(`../Data/${f}.csv`))
   .catch(e => {
     $('#load-status').textContent = 'Unable to load CSVs. Start the server from the project root as described in README.';
     $('#charts-grid').innerHTML = '<div class="panel empty">The dashboard needs access to the CSV files in the Data folder.</div>';
+    $('#charts-grid').setAttribute('aria-busy', 'false');
     console.error(e);
   });
 

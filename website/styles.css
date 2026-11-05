@@ -57,6 +57,8 @@
   --ease-out: cubic-bezier(.23, 1, .32, 1);
   --dur-fast: 120ms;
   --dur-base: 200ms;
+  --dur-slow: 420ms;
+  --dur-reveal: 620ms;
 
   --display: 'Archivo Narrow', 'Arial Narrow', sans-serif;
   --sans: 'DM Sans', system-ui, sans-serif;
@@ -121,6 +123,24 @@ body {
   color: var(--ink);
   font: 16px/1.6 var(--sans);
   -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--green);
+  color: var(--on-green);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 6px;
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  font: 600 12px/1.5 var(--mono);
+  text-align: center;
+  color: var(--soft);
 }
 
 .hero-inner, main, footer {
@@ -216,6 +236,7 @@ h1 {
 .sign-num {
   margin: 0;
   font: 700 clamp(44px, 5.4vw, 64px)/.95 var(--display);
+  font-variant-numeric: tabular-nums;
   letter-spacing: -.01em;
 }
 
@@ -275,7 +296,28 @@ h1 {
 .stats dd {
   margin: 2px 0 0;
   font: 700 30px/1 var(--display);
+  font-variant-numeric: tabular-nums;
   color: var(--ink);
+}
+
+/* The hero settles into place once, on first paint. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-top,
+  h1,
+  .hero-body,
+  .stats {
+    animation: rise var(--dur-reveal) var(--ease-out) both;
+  }
+
+  .hero-top { animation-delay: 0ms; }
+  h1 { animation-delay: 70ms; }
+  .hero-body { animation-delay: 140ms; }
+  .stats { animation-delay: 210ms; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ---------- Section bars ---------- */
@@ -364,6 +406,44 @@ main { padding-bottom: 56px; }
   font: 400 12px/1.45 var(--sans);
   color: var(--note);
 }
+
+.search-examples {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -2px 0 0;
+}
+
+.search-examples-label {
+  font: 500 11px/1.4 var(--mono);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--note);
+}
+
+.chip {
+  padding: 5px 10px;
+  background: var(--chart-ground);
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  color: var(--soft);
+  font: 400 12px/1.4 var(--sans);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) ease,
+              background-color var(--dur-fast) ease,
+              color var(--dur-fast) ease,
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.chip:hover {
+  border-color: var(--green);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.chip:active { transform: scale(.97); }
 
 .stale-note {
   grid-column: 1 / -1;
@@ -474,6 +554,12 @@ main { padding-bottom: 56px; }
   color: var(--green-text);
 }
 
+.report-summary .summary-warn {
+  background: transparent;
+  border-color: var(--red);
+  color: var(--red);
+}
+
 /* ---------- Chart index ---------- */
 
 .views-hint {
@@ -539,6 +625,32 @@ main { padding-bottom: 56px; }
    is on, or the grid would fade down before the swap instead of after it. */
 .charts-grid.is-swapping { opacity: .55; transition: none; }
 
+/* Loading placeholders, shown until the first render replaces the grid. */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 300px;
+}
+
+.sk-line {
+  display: block;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--hair-pale) 25%, var(--hair) 37%, var(--hair-pale) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.sk-line--tab { width: 42px; height: 18px; }
+.sk-line--title { width: 62%; height: 20px; }
+.sk-line--chart { flex: 1; min-height: 200px; margin-top: 6px; }
+
+@keyframes shimmer {
+  from { background-position: 100% 50%; }
+  to { background-position: 0 50%; }
+}
+
 .chart-panel {
   padding: 18px;
   border-top: 2px solid var(--rule);
@@ -546,6 +658,16 @@ main { padding-bottom: 56px; }
 }
 
 .chart-panel--wide { grid-column: 1 / -1; }
+
+@media (hover: hover) {
+  .chart-panel {
+    transition: box-shadow var(--dur-base) var(--ease-out);
+  }
+
+  .chart-panel:hover {
+    box-shadow: 0 16px 36px -32px rgba(0, 0, 0, .8);
+  }
+}
 
 .chart-heading {
   display: flex;
@@ -594,6 +716,24 @@ main { padding-bottom: 56px; }
 
 .chart svg { display: block; width: 100%; height: auto; }
 
+.chart,
+.table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: var(--axis) transparent;
+}
+
+.chart::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar { width: 9px; height: 9px; }
+
+.chart::-webkit-scrollbar-thumb,
+.table-wrap::-webkit-scrollbar-thumb {
+  background: var(--axis);
+  border-radius: 5px;
+}
+
+.chart::-webkit-scrollbar-track,
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+
 .axis { stroke: var(--axis); stroke-width: 1; }
 .gridline { stroke: var(--hair-pale); stroke-width: 1; }
 .tick, .axis-label { font: 14px var(--mono); fill: var(--note); }
@@ -616,6 +756,59 @@ main { padding-bottom: 56px; }
 .heat-label { font: 500 12px var(--mono); text-anchor: middle; }
 .heat-head { font: 500 12px var(--mono); fill: var(--note); text-anchor: middle; }
 .heat-row { font: 500 12px var(--mono); fill: var(--note); }
+
+/* Chart marks arrive after the panel does: bars grow from their baseline,
+   points and heat cells fade in with a short stagger. */
+@media (prefers-reduced-motion: no-preference) {
+  .bar-col,
+  .bar-row {
+    animation: fade-in 420ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
+
+  .bar-col .bar {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: grow-up 620ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
+
+  .bars-h .bar-row .bar {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: grow-right 620ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 45ms);
+  }
+
+  .scatter .dot {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: dot-in 360ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 1.2ms);
+  }
+
+  .heat-cell {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: cell-in 460ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 28ms);
+  }
+
+  .heat-label {
+    animation: fade-in 300ms ease both;
+    animation-delay: calc(var(--i, 0) * 28ms + 120ms);
+  }
+
+  .map-points {
+    animation: fade-in 700ms var(--ease-out) both;
+  }
+}
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes grow-up { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes grow-right { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes dot-in { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@keyframes cell-in { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: none; } }
 
 .chart-note {
   margin: 10px 0 0;
@@ -712,6 +905,7 @@ main { padding-bottom: 56px; }
   position: sticky;
   top: 0;
   z-index: 1;
+  padding: 0;
   background: var(--paper);
   color: var(--note);
   font-size: 11px;
@@ -719,6 +913,35 @@ main { padding-bottom: 56px; }
   letter-spacing: .05em;
   text-transform: uppercase;
 }
+
+.sort-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  width: 100%;
+  padding: 6px 9px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.chart-data th:first-child .sort-btn { justify-content: flex-start; }
+
+.sort-btn:hover { color: var(--ink); }
+.sort-btn.is-sorted { color: var(--green-text); }
+
+.sort-mark {
+  font-size: 10px;
+  line-height: 1;
+  opacity: .4;
+}
+
+.sort-btn.is-sorted .sort-mark { opacity: 1; }
 
 .chart-data td { color: var(--body); }
 .chart-data caption {
@@ -1194,7 +1417,8 @@ footer {
   /* Gentler, not zero: colour stays, movement goes. */
   .btn-primary,
   .btn-ghost,
-  .theme-toggle {
+  .theme-toggle,
+  .chip {
     transition: background-color var(--dur-fast) ease,
                 border-color var(--dur-fast) ease,
                 color var(--dur-fast) ease;
@@ -1202,7 +1426,24 @@ footer {
 
   .btn-primary:active,
   .btn-ghost:active,
-  .theme-toggle:active { transform: none; }
+  .theme-toggle:active,
+  .chip:active { transform: none; }
+
+  .hero-top,
+  h1,
+  .hero-body,
+  .stats,
+  .bar-col,
+  .bar-col .bar,
+  .bar-row,
+  .bars-h .bar-row .bar,
+  .scatter .dot,
+  .heat-cell,
+  .heat-label,
+  .map-points,
+  .sk-line {
+    animation: none !important;
+  }
 
   /* The chart fade is a brightness change, not movement, so it stays: the
      charts still arrive dimmed and lift to full opacity. */
@@ -1216,6 +1457,10 @@ footer {
 @media print {
   html[data-theme] {
     color-scheme: light;
+    /* Keep the black section bars and the green sign: without this the
+       browser drops every background and white text lands on white paper. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
     --ink: #12181b;
     --body: #2c3a3e;
     --soft: #3d4a4e;
@@ -1248,16 +1493,32 @@ footer {
   .chart-index,
   .controls,
   .report-actions,
+  .search-examples,
   .skip-link,
   .footer-links,
   .chart-data { display: none !important; }
 
   body { background: #fff; }
 
+  /* Panels flow as blocks: Chromium sends each grid row to its own page, so a
+     grid here would print one chart per sheet with most of the sheet empty. */
+  .charts-grid { display: block; }
+
+  .section-bar,
+  .story h3,
+  .chart-panel h3 { break-after: avoid; }
+
   .chart-panel {
     break-inside: avoid;
+    margin: 0 0 12px;
+    padding: 12px 14px 14px;
     border: 1px solid var(--hair);
   }
+
+  /* Shorter charts let two panels share a sheet instead of one per page. */
+  .chart svg { max-height: 200px; }
+  .chart-description { margin: 6px 0 4px; font-size: 11px; line-height: 1.4; }
+  .chart-panel h3 { font-size: 16px; }
 
   .chart { overflow: visible; }
   .chart svg { width: 100% !important; }
