@@ -761,7 +761,7 @@ function compareSentence(a, b) {
     : `${ratio.name} has ${ratioText(ratio.value)}× more active meters per 1,000 affordable units than ${trail}.`;
 }
 
-function compareBodyHtml(a, b) {
+function signHtml(a, b) {
   const ra = boroughRow(a);
   const rb = boroughRow(b);
   const val = (row, key) => (row ? N(row[key]) : null);
@@ -783,13 +783,19 @@ function compareBodyHtml(a, b) {
       ? `as many active meters per 1,000 affordable units in ${esc(lead)} as in ${esc(trail)}`
       : `more active meters per 1,000 affordable units in ${esc(lead)} than in ${esc(trail)}`;
 
-  const sign =
-    `<div class="cmp-sign">` +
-      `<p class="sign-num">${keyRatio ? ratioText(keyRatio.value) + '×' : '–'}</p>` +
-      `<p class="sign-label">${signLabel}</p>` +
-      `<p class="cmp-pair"><span>${esc(a)} ${ka == null ? '–' : keyMetric[2](ka)}</span>` +
-      `<span>${esc(b)} ${kb == null ? '–' : keyMetric[2](kb)}</span></p>` +
-    `</div>`;
+  return `<div class="cmp-sign">` +
+    `<p class="sign-num">${keyRatio ? ratioText(keyRatio.value) + '×' : '–'}</p>` +
+    `<p class="sign-label">${signLabel}</p>` +
+    `<p class="cmp-pair"><span>${esc(a)} ${ka == null ? '–' : keyMetric[2](ka)}</span>` +
+    `<span>${esc(b)} ${kb == null ? '–' : keyMetric[2](kb)}</span></p>` +
+  `</div>`;
+}
+
+function compareBodyHtml(a, b) {
+  const ra = boroughRow(a);
+  const rb = boroughRow(b);
+  const val = (row, key) => (row ? N(row[key]) : null);
+  const sign = signHtml(a, b);
 
   const rows = compareMetrics.map(([key, label, format], i) => {
     const va = val(ra, key);
@@ -798,23 +804,23 @@ function compareBodyHtml(a, b) {
     const ratio = compareRatio(va, vb, a, b);
 
     const line = (name, v, cls) => {
-      const share = v == null ? 0 : Math.min(1, v / max);
+      /* Fills start at zero; updateCompareBody releases them to their targets
+         after a reflow, so the transition grows them in on first build and
+         retargets smoothly on every change after that. */
       return `<div class="cmp-line">` +
         `<span class="cmp-name">${esc(name)}</span>` +
-        `<span class="cmp-track"><span class="cmp-fill cmp-fill--${cls}" style="--v:${share.toFixed(4)};--i:${i}"></span></span>` +
+        `<span class="cmp-track"><span class="cmp-fill cmp-fill--${cls}" style="--v:0"></span></span>` +
         `<span class="cmp-val">${v == null ? '–' : format(v)}</span>` +
       `</div>`;
     };
 
     return `<div class="cmp-row">` +
       `<div class="cmp-row-head"><h3 class="cmp-label">${esc(label)}</h3>` +
-      (ratio
-        ? `<span class="cmp-ratio">${
-          ratioText(ratio.value) === '1.0'
-            ? 'Even'
-            : `${esc(ratio.name)} ${ratioText(ratio.value)}× ${esc(ratio.name === a ? b : a)}`
-        }</span>`
-        : '') +
+      `<span class="cmp-ratio">${ratio
+        ? (ratioText(ratio.value) === '1.0'
+          ? 'Even'
+          : `${esc(ratio.name)} ${ratioText(ratio.value)}× ${esc(ratio.name === a ? b : a)}`)
+        : ''}</span>` +
       `</div>` +
       line(a, va, 'a') + line(b, vb, 'b') +
     `</div>`;
@@ -858,19 +864,68 @@ function renderCompare() {
   [...b.options].forEach(o => { o.disabled = o.value === compareA; });
 
   const body = $('#compare-body');
-  const wasOpen = !!body.querySelector('.cmp-data')?.open;
-  body.innerHTML = compareBodyHtml(compareA, compareB);
-  if (wasOpen) {
-    const table = body.querySelector('.cmp-data');
-    if (table) table.open = true;
+
+  /* The rows are built once and patched afterwards: rebuilding them on every
+     change would restart the fill animation from zero, so a second change
+     inside 320ms blinked the bars. Patched fills retarget mid-flight. */
+  if (!body.querySelector('.cmp-rows')) {
+    body.innerHTML = compareBodyHtml(compareA, compareB);
+    body.setAttribute('aria-busy', 'false');
+    /* Commit the zero-width state, then release it — without the reflow the
+       browser never paints the empty bars and the entrance is lost. */
+    void body.offsetWidth;
   }
-  body.setAttribute('aria-busy', 'false');
+  updateCompareBody(compareA, compareB);
 
   /* The boot call stays silent so the region does not talk over the hero. */
   if (compareAnnounced) $('#cmp-status').textContent = compareSentence(compareA, compareB);
   compareAnnounced = true;
 
   writeUrl();
+}
+
+function updateCompareBody(a, b) {
+  const body = $('#compare-body');
+  const ra = boroughRow(a);
+  const rb = boroughRow(b);
+  const val = (row, key) => (row ? N(row[key]) : null);
+
+  /* The sign is a new node, so its 160ms arrival replays on every change.
+     outerHTML, not replaceWith: a string argument there becomes a text node. */
+  const oldSign = body.querySelector('.cmp-sign');
+  if (oldSign) oldSign.outerHTML = signHtml(a, b);
+
+  body.querySelectorAll('.cmp-row').forEach((rowEl, i) => {
+    const [key, , format] = compareMetrics[i];
+    const va = val(ra, key);
+    const vb = val(rb, key);
+    const max = Math.max(va || 0, vb || 0) || 1;
+    const ratio = compareRatio(va, vb, a, b);
+
+    rowEl.querySelector('.cmp-ratio').textContent = ratio
+      ? (ratioText(ratio.value) === '1.0'
+        ? 'Even'
+        : `${ratio.name} ${ratioText(ratio.value)}× ${ratio.name === a ? b : a}`)
+      : '';
+
+    [[a, va], [b, vb]].forEach(([name, v], j) => {
+      const lineEl = rowEl.querySelectorAll('.cmp-line')[j];
+      lineEl.querySelector('.cmp-name').textContent = name;
+      lineEl.querySelector('.cmp-fill').style.setProperty('--v', (v == null ? 0 : Math.min(1, v / max)).toFixed(4));
+      lineEl.querySelector('.cmp-val').textContent = v == null ? '–' : format(v);
+    });
+  });
+
+  const table = body.querySelector('.cmp-table');
+  if (table) {
+    table.querySelector('thead tr').innerHTML =
+      `<th scope="col">Metric</th><th scope="col">${esc(a)}</th><th scope="col">${esc(b)}</th>`;
+    table.querySelector('tbody').innerHTML = compareMetrics.map(([key, label, format]) => {
+      const va = val(ra, key);
+      const vb = val(rb, key);
+      return `<tr><td>${esc(label)}</td><td>${va == null ? '–' : format(va)}</td><td>${vb == null ? '–' : format(vb)}</td></tr>`;
+    }).join('');
+  }
 }
 
 $('#cmp-a').addEventListener('change', e => {
@@ -932,7 +987,8 @@ function spyPanels() {
   if (!links.length || !panels.length) return;
 
   const idx = document.getElementById('chart-index');
-  idx.classList.toggle('is-stuck', idx.getBoundingClientRect().top <= 0);
+  const sticky = idx.closest('.index-sticky') || idx;
+  sticky.classList.toggle('is-stuck', sticky.getBoundingClientRect().top <= 0);
 
   const line = 80;
   const vh = window.innerHeight;
@@ -1427,6 +1483,13 @@ $('#charts-grid').addEventListener('toggle', e => {
   if (!spec) return;
   details.insertAdjacentHTML('beforeend', tableHtml(spec));
   details.dataset.filled = '1';
+
+  /* The first fill fades the table in; sorts replace the wrap without this
+     call, and reopens show the existing node, so neither replays it. */
+  const wrap = details.querySelector('.table-wrap');
+  if (wrap && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    wrap.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'cubic-bezier(.23, 1, .32, 1)' });
+  }
 }, true);
 
 /* ------------------------------------------------------------------ *

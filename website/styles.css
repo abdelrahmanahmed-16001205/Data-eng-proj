@@ -1,4 +1,4 @@
-/* Signage system: NYC parking-regulation vernacular — condensed caps,
+﻿/* Signage system: NYC parking-regulation vernacular â€” condensed caps,
    black bars, regulation green for meters, red for housing records.
    Tokens are split into text / surface / structure so one dark palette
    can override them without touching a single component rule. */
@@ -45,7 +45,7 @@
   --impact-text: #e8efeb;
   --impact-accent: #a8e6c1;
 
-  /* sequential ramp for the heatmap: low → high */
+  /* sequential ramp for the heatmap: low â†’ high */
   --heat-1: #e7f1eb; --heat-1-ink: #12321f;
   --heat-2: #c2e0cd; --heat-2-ink: #0b2a1a;
   --heat-3: #93ceac; --heat-3-ink: #08281a;
@@ -604,28 +604,42 @@ main { padding-bottom: 56px; }
 /* Sticky inside `.views`, the wrapper around the index and the grid: the
    containing block ends with the last chart, so the index leaves the screen at
    Q12 instead of staying pinned through the story and team sections. */
-.chart-index {
+/* The sticky wrapper, not the nav, carries the shadow: the nav's own
+   overflow-x would clip a pseudo-element's box-shadow. The wrapper's padding
+   keeps the ground behind the bar while pinned, and the shadow composites on
+   opacity, the way .chart-panel::after does. */
+.index-sticky {
   position: sticky;
   top: 0;
   z-index: 20;
+  background: var(--ground);
+  padding-bottom: 16px;
+}
+
+.index-sticky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: 0 12px 20px -16px rgba(0, 0, 0, .55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.index-sticky.is-stuck::after { opacity: 1; }
+
+.chart-index {
   display: flex;
   gap: 6px;
   overflow-x: auto;
   padding: 10px 0;
-  margin: 0 0 16px;
-  background: var(--ground);
   border-bottom: 1px solid var(--hair);
   scrollbar-width: thin;
   scrollbar-color: var(--axis) transparent;
-  transition: box-shadow var(--dur-base) var(--ease-out);
 }
 
-/* Lifts off the charts once it is actually pinned; at its natural position
-   the border alone is the separator. */
-.chart-index.is-stuck { box-shadow: 0 12px 20px -16px rgba(0, 0, 0, .55); }
-
 /* A visible thumb only when the row actually overflows: at 1280px all twelve
-   chips fit and nothing is drawn. Hiding it entirely left no cue that Q08–Q12
+   chips fit and nothing is drawn. Hiding it entirely left no cue that Q08â€“Q12
    existed on a phone. */
 .chart-index::-webkit-scrollbar { height: 6px; }
 .chart-index::-webkit-scrollbar-thumb { background: var(--axis); border-radius: 3px; }
@@ -867,7 +881,7 @@ main { padding-bottom: 56px; }
 /* Chart marks arrive when their panel first reaches the viewport: bars grow
    from their baseline, points and heat cells fade in with a short stagger. The
    class is added once per panel by an IntersectionObserver, so a Generate after
-   that is just the crossfade — the data does not replay its entrance. */
+   that is just the crossfade â€” the data does not replay its entrance. */
 @media (prefers-reduced-motion: no-preference) {
   .chart-panel.is-revealed .bar-col,
   .chart-panel.is-revealed .bar-row {
@@ -934,7 +948,7 @@ main { padding-bottom: 56px; }
 
 .wide-body { display: grid; gap: 20px; align-items: start; }
 
-/* A square map at full panel width was the tallest object on the page — one
+/* A square map at full panel width was the tallest object on the page â€” one
    viewport for one of twelve charts. */
 .chart-panel--wide .chart { max-width: 640px; }
 
@@ -1124,7 +1138,7 @@ main { padding-bottom: 56px; }
 
 .swap-btn:active { transform: scale(.97); }
 
-/* The arrow glyph is symmetric under 180°, so the reset after the animation
+/* The arrow glyph is symmetric under 180Â°, so the reset after the animation
    is invisible and a second press turns the same way. */
 @keyframes swap-turn {
   from { transform: rotate(0); }
@@ -1219,20 +1233,20 @@ main { padding-bottom: 56px; }
 
 .cmp-fill {
   display: block;
-  width: calc(var(--v, 0) * 100%);
+  /* Full track width scaled by the value: the number changes via --v and the
+     transform transition carries it, so a change mid-flight retargets instead
+     of restarting. Layout never moves. */
+  width: 100%;
   height: 100%;
+  transform: scaleX(var(--v, 0));
   transform-origin: left center;
+  transition: transform 320ms var(--ease-out);
 }
 
 .cmp-fill--a { background: var(--green); }
 .cmp-fill--b { background: var(--soft); }
 
 @media (prefers-reduced-motion: no-preference) {
-  .cmp-fill {
-    animation: grow-right 320ms var(--ease-out) both;
-    animation-delay: calc(var(--i, 0) * 45ms);
-  }
-
   /* The sign is recreated on every change, so the ratio arrives instead of
      teleporting. Reduced motion drops it with no extra rule. */
   .cmp-sign {
@@ -1554,6 +1568,9 @@ main { padding-bottom: 56px; }
   text-decoration: none;
   white-space: nowrap;
   vertical-align: 1px;
+  transition: background-color var(--dur-fast) ease,
+              border-color var(--dur-fast) ease,
+              color var(--dur-fast) ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1711,6 +1728,8 @@ footer {
   color: var(--soft);
   text-decoration: none;
   border-bottom: 1px solid transparent;
+  transition: border-color var(--dur-fast) ease,
+              color var(--dur-fast) ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1812,6 +1831,9 @@ footer {
   .chart-index a:active,
   .chip:active { transform: none; }
 
+  /* The comparison bars jump straight to their new widths. */
+  .cmp-fill { transition: none; }
+
   .swap-btn svg { animation: none !important; }
 
   .hero-top,
@@ -1876,7 +1898,7 @@ footer {
   }
 
   .theme-toggle,
-  .chart-index,
+  .index-sticky,
   .controls,
   .compare-controls,
   .report-actions,
@@ -1992,7 +2014,7 @@ footer {
   .sensitivity-list li { min-width: 100%; }
 }
 
-/* Size by pointer capability, not viewport width: a 768–1024px tablet is
+/* Size by pointer capability, not viewport width: a 768â€“1024px tablet is
    coarse-pointer and would otherwise keep the 26.8px chips and 34px buttons. */
 @media (any-pointer: coarse) {
   .chip,
