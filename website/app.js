@@ -1038,7 +1038,9 @@ function watchPanels() {
 
 function syncScrollers() {
   const mark = (el, label, baseLabel) => {
-    const over = el.scrollWidth > el.clientWidth + 2;
+    /* Either axis: charts and the index overflow sideways, data tables under
+       their 300px cap overflow vertically. */
+    const over = el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2;
     if (over) {
       el.tabIndex = 0;
       el.setAttribute('role', 'group');
@@ -1060,6 +1062,11 @@ function syncScrollers() {
 
   const index = $('#chart-index');
   if (index) mark(index, 'Jump to a chart — scroll sideways to see all twelve', 'Jump to a chart');
+
+  document.querySelectorAll('.chart-data .table-wrap').forEach(w => {
+    const cap = w.querySelector('caption')?.textContent || 'Data table';
+    mark(w, cap + ' — scroll for more rows');
+  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -1433,6 +1440,7 @@ $('#charts-grid').addEventListener('click', e => {
     /* The sort rebuilds the header, so the button that was activated no longer
        exists and focus would fall to <body>. Put it back on the same column. */
     details.querySelector('.sort-btn[data-col="' + col + '"]')?.focus({ preventScroll: true });
+    syncScrollers();
   }
 });
 
@@ -1500,6 +1508,7 @@ $('#charts-grid').addEventListener('toggle', e => {
   if (wrap && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     wrap.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'cubic-bezier(.23, 1, .32, 1)' });
   }
+  syncScrollers();
 }, true);
 
 /* ------------------------------------------------------------------ *
