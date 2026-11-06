@@ -978,7 +978,15 @@ main { padding-bottom: 56px; }
 .map-legend li { display: flex; align-items: center; gap: 7px; }
 .map-legend .swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--red); }
 .map-legend .swatch.meter { background: var(--green); border-radius: 1px; }
-.map-legend .heat-swatch { width: 12px; height: 12px; border-radius: 2px; }
+/* The empty-state swatch is the legend's only visible edge, so its outline
+   carries the 3:1 non-text contrast (1.4.11) — --hair would sit at ~1.1:1.
+   --soft is the same token the borough outlines use for meaningful strokes. */
+.map-legend .heat-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--soft);
+}
 .heat-legend { gap: 8px 14px; font-size: 11.5px; }
 
 .empty {

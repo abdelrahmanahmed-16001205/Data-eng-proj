@@ -1037,19 +1037,29 @@ function watchPanels() {
  * ------------------------------------------------------------------ */
 
 function syncScrollers() {
-  document.querySelectorAll('.chart').forEach(el => {
+  const mark = (el, label, baseLabel) => {
     const over = el.scrollWidth > el.clientWidth + 2;
-    const name = el.closest('article')?.querySelector('h3')?.textContent || 'Chart';
     if (over) {
       el.tabIndex = 0;
       el.setAttribute('role', 'group');
-      el.setAttribute('aria-label', name + ' — scroll sideways to see the full chart');
+      el.setAttribute('aria-label', label);
     } else {
       el.removeAttribute('tabindex');
       el.removeAttribute('role');
-      el.removeAttribute('aria-label');
+      /* The index keeps its static nav label; the charts' labels are fully
+         synthetic, so there the attribute is simply removed. */
+      if (baseLabel) el.setAttribute('aria-label', baseLabel);
+      else el.removeAttribute('aria-label');
     }
+  };
+
+  document.querySelectorAll('.chart').forEach(el => {
+    const name = el.closest('article')?.querySelector('h3')?.textContent || 'Chart';
+    mark(el, name + ' — scroll sideways to see the full chart');
   });
+
+  const index = $('#chart-index');
+  if (index) mark(index, 'Jump to a chart — scroll sideways to see all twelve', 'Jump to a chart');
 }
 
 /* ------------------------------------------------------------------ *
