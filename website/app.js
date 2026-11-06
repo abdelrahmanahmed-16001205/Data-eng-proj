@@ -166,7 +166,7 @@ function bars(labels, values, title, xlabel, ylabel, percent = false, selected =
   const w = Math.min(66, 650 / labels.length);
   const gap = Math.max(4, (710 - w * labels.length) / labels.length);
   const budget = Math.max(5, Math.floor((w + gap) / 8.4));
-  const alt = labels.map((l, i) => `${l}: ${values[i].toLocaleString(undefined, { maximumFractionDigits: 2 })}${percent ? '%' : ''}`).join('; ');
+  const alt = labels.map((l, i) => `${l}: ${values[i].toLocaleString(undefined, { maximumFractionDigits: 1 })}${percent ? '%' : ''}`).join('; ');
   let s = axes(title + (alt ? ' — ' + alt : ''), xlabel, ylabel);
   for (let j = 0; j < 5; j++) {
     const y = 303 - j * 65;
@@ -179,11 +179,10 @@ function bars(labels, values, title, xlabel, ylabel, percent = false, selected =
     const cut = v => (v.length > budget ? v.slice(0, budget - 1) + '…' : v);
     const dense = labels.length > 5;
     const lines = dense && String(l).includes(' · ') ? String(l).split(' · ') : [String(l)];
-    const val = values[i].toLocaleString(undefined, { maximumFractionDigits: 2 }) + (percent ? '%' : '');
+    const val = values[i].toLocaleString(undefined, { maximumFractionDigits: 1 }) + (percent ? '%' : '');
     const on = selected !== null && String(l) === String(selected);
-    s += `<g class="bar-col" style="--i:${i}">` +
-      `<rect class="bar${on ? ' is-selected' : ''}" x="${x}" y="${303 - h}" width="${w}" height="${h}" rx="3">` +
-      `<title>${esc(l)}: ${val}</title></rect>` +
+    s += `<g class="bar-col" style="--i:${i}" data-tip="${esc(l)}: ${esc(val)}">` +
+      `<rect class="bar${on ? ' is-selected' : ''}" x="${x}" y="${303 - h}" width="${w}" height="${h}" rx="3"></rect>` +
       `<text class="bar-value" x="${x + w / 2}" y="${303 - h - 7}" text-anchor="middle">${esc(val)}</text>` +
       lines.map((v, j) => `<text class="tick" x="${x + w / 2}" y="${lines.length > 1 ? 313 + j * 14 : 319}" text-anchor="middle">${esc(cut(v))}</text>`).join('') +
       `</g>`;
@@ -199,7 +198,7 @@ function barsH(labels, values, title, xlabel, percent = false) {
   const rowH = 28, rowGap = 9, top = 44, left = 190, right = 770, foot = 34;
   const barMax = right - left;
   const height = top + labels.length * (rowH + rowGap) - rowGap + foot;
-  const alt = labels.map((l, i) => `${l}: ${values[i].toLocaleString(undefined, { maximumFractionDigits: 2 })}${percent ? '%' : ''}`).join('; ');
+  const alt = labels.map((l, i) => `${l}: ${values[i].toLocaleString(undefined, { maximumFractionDigits: 1 })}${percent ? '%' : ''}`).join('; ');
   let s = `<svg class="bars-h" viewBox="0 0 820 ${height}" role="img" aria-label="${esc(title + (alt ? ' — ' + alt : ''))}">`;
   for (let j = 0; j <= 4; j++) {
     const x = left + barMax * j / 4;
@@ -209,11 +208,10 @@ function barsH(labels, values, title, xlabel, percent = false) {
   labels.forEach((l, i) => {
     const y = top + i * (rowH + rowGap);
     const w = values[i] / mx * barMax;
-    const val = values[i].toLocaleString(undefined, { maximumFractionDigits: 2 }) + (percent ? '%' : '');
-    s += `<g class="bar-row" style="--i:${i}">` +
+    const val = values[i].toLocaleString(undefined, { maximumFractionDigits: 1 }) + (percent ? '%' : '');
+    s += `<g class="bar-row" style="--i:${i}" data-tip="${esc(l)}: ${esc(val)}">` +
       `<text class="tick" x="${left - 12}" y="${y + rowH / 2 + 5}" text-anchor="end">${esc(l)}</text>` +
-      `<rect class="bar" x="${left}" y="${y}" width="${Math.max(w, 1).toFixed(1)}" height="${rowH}" rx="2">` +
-      `<title>${esc(l + ': ' + val)}</title></rect>` +
+      `<rect class="bar" x="${left}" y="${y}" width="${Math.max(w, 1).toFixed(1)}" height="${rowH}" rx="2"></rect>` +
       `<text class="tick" x="${(left + w + 8).toFixed(1)}" y="${y + rowH / 2 + 5}">${esc(val)}</text>` +
       `</g>`;
   });
@@ -249,8 +247,7 @@ function scatter(rows, xk, yk, title, xlabel, ylabel, labelKey) {
     s += `<text class="tick" x="${x}" y="317" text-anchor="middle">${fmt(xmin + (xmax - xmin) * i / 4)}</text>`;
   }
   pts.forEach((p, i) => {
-    s += `<circle class="dot" cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" style="--i:${i}">` +
-      `<title>${esc((p[2] ? p[2] + ': ' : '') + Number(p[0].toFixed(2)) + ', ' + Number(p[1].toFixed(2)))}</title></circle>`;
+    s += `<circle class="dot" cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" style="--i:${i}" data-tip="${esc((p[2] ? p[2] + ': ' : '') + Number(p[0].toFixed(2)) + ', ' + Number(p[1].toFixed(2)))}"></circle>`;
   });
   return { svg: s + '</svg>', sampled: pts.length, total, points: pts };
 }
@@ -361,8 +358,7 @@ function heatmap(h) {
       const tip = c
         ? `${b} ${yr}: ${usable ? pct(share) + ' of ' + c.valid + ' usable records' : 'fewer than ' + HEAT_MIN_SAMPLE + ' usable records (' + c.valid + ')'}`
         : `${b} ${yr}: no housing records`;
-      s += `<rect class="heat-cell" x="${x}" y="${y}" width="${cw}" height="${ch}" rx="2" style="fill:${fill};--i:${i}">` +
-        `<title>${esc(tip)}</title></rect>` +
+      s += `<rect class="heat-cell" x="${x}" y="${y}" width="${cw}" height="${ch}" rx="2" style="fill:${fill};--i:${i}" data-tip="${esc(tip)}"></rect>` +
         `<text class="heat-label" x="${(x + cw / 2).toFixed(1)}" y="${y + ch / 2 + 4}" style="fill:${ink};--i:${i}">${share === null ? '–' : Math.round(share * 100) + '%'}</text>`;
     });
   });
@@ -933,6 +929,9 @@ function spyPanels() {
   const panels = [...document.querySelectorAll('.chart-panel')];
   if (!links.length || !panels.length) return;
 
+  const idx = document.getElementById('chart-index');
+  idx.classList.toggle('is-stuck', idx.getBoundingClientRect().top <= 0);
+
   const line = 80;
   const vh = window.innerHeight;
   const rects = panels.map(p => ({ p, r: p.getBoundingClientRect() }));
@@ -984,6 +983,77 @@ function syncScrollers() {
     }
   });
 }
+
+/* ------------------------------------------------------------------ *
+ * Chart tooltips
+ *
+ * Marks carry their value in data-tip. The native <title> tooltip took
+ * about a second to appear, was unstyled, and a 3px scatter dot was
+ * nearly impossible to hit. Screen readers are not affected: every chart
+ * carries its values in the aria-label, and every chart has a table.
+ * ------------------------------------------------------------------ */
+
+const chartTip = document.createElement('div');
+chartTip.className = 'chart-tip';
+chartTip.setAttribute('aria-hidden', 'true');
+chartTip.hidden = true;
+document.body.appendChild(chartTip);
+
+let tipFrame = 0;
+let tipTouchTimer = 0;
+
+function placeTip(x, y) {
+  const r = chartTip.getBoundingClientRect();
+  let left = x + 14;
+  let top = y - r.height - 12;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 14;
+  if (left < 8) left = 8;
+  if (top < 8) top = y + 18;
+  chartTip.style.left = Math.round(left) + 'px';
+  chartTip.style.top = Math.round(top) + 'px';
+}
+
+function showTip(text, x, y) {
+  if (chartTip.textContent !== text) chartTip.textContent = text;
+  chartTip.hidden = false;
+  placeTip(x, y);
+}
+
+function hideTip() {
+  if (tipFrame) { cancelAnimationFrame(tipFrame); tipFrame = 0; }
+  clearTimeout(tipTouchTimer);
+  chartTip.hidden = true;
+}
+
+$('#charts-grid').addEventListener('pointerover', e => {
+  const t = e.target.closest('[data-tip]');
+  if (!t) return;
+  showTip(t.dataset.tip, e.clientX, e.clientY);
+  /* A touch tap has no move events to follow, so the tooltip dismisses itself. */
+  if (e.pointerType !== 'mouse') {
+    clearTimeout(tipTouchTimer);
+    tipTouchTimer = setTimeout(hideTip, 2600);
+  }
+});
+
+$('#charts-grid').addEventListener('pointermove', e => {
+  if (chartTip.hidden || e.pointerType !== 'mouse') return;
+  if (tipFrame) return;
+  tipFrame = requestAnimationFrame(() => { tipFrame = 0; if (!chartTip.hidden) placeTip(e.clientX, e.clientY); });
+});
+
+$('#charts-grid').addEventListener('pointerout', e => {
+  /* Touch fires pointerout after every tap-up; its tooltip dismisses on the
+     timer instead, and a scrolling finger is caught by the scroll listener. */
+  if (e.pointerType && e.pointerType !== 'mouse') return;
+  const to = e.relatedTarget;
+  if (to && to.closest && to.closest('[data-tip]')) return;
+  hideTip();
+});
+
+/* Scrolling under a visible tooltip leaves it pointing at nothing; capture
+   catches the chart containers' own sideways scrollers too. */
+addEventListener('scroll', hideTip, { capture: true, passive: true });
 
 /* ------------------------------------------------------------------ *
  * Render

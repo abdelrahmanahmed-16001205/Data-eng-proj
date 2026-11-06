@@ -618,7 +618,12 @@ main { padding-bottom: 56px; }
   border-bottom: 1px solid var(--hair);
   scrollbar-width: thin;
   scrollbar-color: var(--axis) transparent;
+  transition: box-shadow var(--dur-base) var(--ease-out);
 }
+
+/* Lifts off the charts once it is actually pinned; at its natural position
+   the border alone is the separator. */
+.chart-index.is-stuck { box-shadow: 0 12px 20px -16px rgba(0, 0, 0, .55); }
 
 /* A visible thumb only when the row actually overflows: at 1280px all twelve
    chips fit and nothing is drawn. Hiding it entirely left no cue that Q08–Q12
@@ -801,6 +806,31 @@ main { padding-bottom: 56px; }
 .bar-value { font: 500 11px var(--mono); fill: var(--note); }
 .dot { fill: var(--red); fill-opacity: .8; }
 .dot.secondary { fill: var(--green); }
+
+/* A 3px dot is unhittable: an invisible stroke ring widens the pointer target
+   without drawing anything. pointer-events: all keeps the fill itself hittable
+   and ignores the transparent paint. The svg scales an 820-unit viewBox down
+   to ~640px, so 20 units land at roughly a 20px target on screen. */
+.scatter .dot {
+  pointer-events: all;
+  stroke: transparent;
+  stroke-width: 20;
+}
+
+/* The chart tooltip. Ink-on-ground inverts per theme, matching the signage. */
+.chart-tip {
+  position: fixed;
+  z-index: 80;
+  max-width: 280px;
+  padding: 7px 10px;
+  background: var(--ink);
+  color: var(--ground);
+  font: 500 12px/1.45 var(--mono);
+  letter-spacing: .02em;
+  border-radius: 2px;
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, .55);
+  pointer-events: none;
+}
 .map-ground { fill: var(--map-water); }
 .borough { fill: var(--map-land); stroke: var(--soft); stroke-width: 1; stroke-opacity: .55; }
 .borough-label {
@@ -814,7 +844,7 @@ main { padding-bottom: 56px; }
   stroke-linejoin: round;
 }
 .heat-cell { stroke: var(--hair); stroke-width: 1; }
-.heat-label { font: 500 12px var(--mono); text-anchor: middle; }
+.heat-label { font: 500 12px var(--mono); text-anchor: middle; pointer-events: none; }
 .heat-head { font: 500 12px var(--mono); fill: var(--note); text-anchor: middle; }
 .heat-row { font: 500 12px var(--mono); fill: var(--note); }
 
@@ -1495,6 +1525,29 @@ main { padding-bottom: 56px; }
 .findings li { margin-bottom: .5rem; text-wrap: pretty; }
 .findings li:last-child { margin-bottom: 0; }
 
+/* A finding points at the chart that answers it, styled like the index chips. */
+.q-chip {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px 2px;
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  font: 500 10.5px/1.4 var(--mono);
+  letter-spacing: .04em;
+  color: var(--green-text);
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .q-chip:hover {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--on-green);
+  }
+}
+
 .impact-block {
   padding: 20px 22px;
   background: var(--bar);
@@ -1792,6 +1845,11 @@ footer {
   .skip-link,
   .footer-links,
   .chart-data { display: none !important; }
+
+  .chart-tip { display: none !important; }
+
+  /* A paper copy cannot click a chip; the finding text stands alone. */
+  .q-chip { display: none; }
 
   .bar-screen { display: none; }
   .bar-print { display: inline; }
