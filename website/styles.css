@@ -595,7 +595,6 @@ main { padding-bottom: 56px; }
 /* ---------- Chart index ---------- */
 
 .views-hint {
-  display: none;
   margin: 0 0 12px;
   font: 400 12.5px/1.5 var(--sans);
   color: var(--note);
@@ -662,6 +661,23 @@ main { padding-bottom: 56px; }
   background: var(--green);
   border-color: var(--green);
   color: var(--on-green);
+}
+
+/* Names the question you are reading, in the bar's free right end. The chips
+   stay bare numbers: twelve titled chips would need ~2400px in one row. */
+.index-readout {
+  display: none;
+  margin-left: auto;
+  align-self: center;
+  padding-left: 20px;
+  font: 500 11.5px/1.4 var(--mono);
+  letter-spacing: .03em;
+  color: var(--note);
+  white-space: nowrap;
+}
+
+@media (min-width: 1100px) {
+  .index-readout { display: block; }
 }
 
 /* ---------- Charts ---------- */
@@ -1669,6 +1685,7 @@ main { padding-bottom: 56px; }
 
 footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 28px;
   padding-top: 22px;
@@ -1676,6 +1693,28 @@ footer {
   border-top: 1px solid var(--hair);
   font: 400 12px/1.6 var(--mono);
   color: var(--note);
+}
+
+/* The way back up after the long views scroll: one full-width row of section
+   links, then the project info under it. Softer than the green project links,
+   which point off the page. */
+.footer-sections {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.footer-sections a {
+  color: var(--soft);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footer-sections a:hover { border-bottom-color: currentColor; color: var(--ink); }
 }
 
 .footer-main { max-width: 72ch; }
@@ -1844,6 +1883,8 @@ footer {
   .search-examples,
   .skip-link,
   .footer-links,
+  .footer-sections,
+  .views-hint,
   .chart-data { display: none !important; }
 
   .chart-tip { display: none !important; }
@@ -1919,7 +1960,6 @@ footer {
 
 @media (max-width: 640px) {
   .hero-inner, main, footer { padding-left: 18px; padding-right: 18px; }
-  .views-hint { display: block; }
   .compare { padding: 16px; }
   .cmp-line { grid-template-columns: 76px minmax(0, 1fr) 66px; gap: 8px; }
   .cmp-name { font-size: 10px; }
@@ -1927,7 +1967,8 @@ footer {
   .chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .chart svg { width: 620px; height: auto; }
   .chart-heading h3 { font-size: 19px; }
-  .stats { gap: 14px 24px; }
+  /* Two per row: flex-wrap left the last two stats on orphaned rows. */
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
   .stats dd { font-size: 26px; }
   .method-stats dd { font-size: 21px; }
   .hero-top { flex-wrap: wrap; }

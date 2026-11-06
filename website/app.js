@@ -911,7 +911,9 @@ function buildIndex() {
   $('#chart-index').innerHTML = questions.map((q, i) => {
     const n = String(i + 1).padStart(2, '0');
     return `<a href="#q${n}" title="${esc(q[0])}" aria-label="Question ${i + 1}: ${esc(q[0])}">Q${n}</a>`;
-  }).join('');
+    /* The readout names the current question at the bar's free right end:
+       twelve titled chips would need ~2400px, which no laptop row has. */
+  }).join('') + '<span class="index-readout" aria-hidden="true"></span>';
 }
 
 /* The index marks the question row at the top of the reading area. The grid is
@@ -950,6 +952,16 @@ function spyPanels() {
     if (current.has(a.hash)) a.setAttribute('aria-current', 'true');
     else a.removeAttribute('aria-current');
   });
+
+  const readout = document.getElementById('chart-index').querySelector('.index-readout');
+  if (readout) {
+    if (row.length) {
+      const n = Number(row[0].p.id.slice(1));
+      readout.textContent = 'Q' + String(n).padStart(2, '0') + ' · ' + questions[n - 1][0];
+    } else {
+      readout.textContent = '';
+    }
+  }
 }
 
 function queueSpy() {
