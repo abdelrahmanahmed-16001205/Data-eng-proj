@@ -140,8 +140,9 @@ Every answer is discussed with its limitations in the final notebook section.
 - A sortable data table under every chart, filled on first open, holding the same numbers the chart draws.
 - CSV export of the filtered housing or meter rows, **Copy link** (which puts the current filters and the
   comparison pair in the URL so a view can be reopened or shared), and **Print / PDF** for a paper copy.
-- Keyboard support: skip link, visible focus, `/` to jump to search, `Esc` to leave it, and chart
-  containers that become focusable only when they scroll sideways.
+- Keyboard support: skip link, visible focus, `/` to jump to search, `Esc` to leave it, and scrollable
+  containers (charts on narrow screens, the chart index on phones) that become focusable only when they
+  overflow.
 
 The address bar carries the state: `borough`, `year`, `construction`, `status` and `q` for the filters,
 `a` and `b` for the comparison pair. Only values that differ from the default are written.

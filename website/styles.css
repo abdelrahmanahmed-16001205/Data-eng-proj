@@ -137,7 +137,7 @@ kbd {
   border: 1px solid var(--hair);
   border-bottom-width: 2px;
   border-radius: 3px;
-  font: 600 12px/1.5 var(--mono);
+  font: 700 12px/1.5 var(--mono);
   text-align: center;
   color: var(--soft);
 }
@@ -864,7 +864,7 @@ main { padding-bottom: 56px; }
 .map-ground { fill: var(--map-water); }
 .borough { fill: var(--map-land); stroke: var(--soft); stroke-width: 1; stroke-opacity: .55; }
 .borough-label {
-  font: 600 12px var(--mono);
+  font: 700 12px var(--mono);
   fill: var(--ink);
   letter-spacing: .06em;
   text-anchor: middle;
