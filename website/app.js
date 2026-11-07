@@ -663,8 +663,18 @@ function q12(h) {
     return { n: x.length, median: x.length ? x[Math.floor(x.length / 2)] : null };
   });
   const shown = groups.map((g, i) => (g.n ? i : -1)).filter(i => i >= 0);
+  const paired = groups[0].median !== null && groups[1].median !== null && groups[0].median > 0;
+  const gap = paired ? groups[0].median - groups[1].median : null;
+  const side =
+    (paired
+      ? `<div><h4>Gap</h4><p class="chart-note">${fmt(groups[1].median)} days near an active meter versus ${fmt(groups[0].median)} without one: ${fmt(Math.abs(gap))} days (${pct(Math.abs(gap) / groups[0].median)}) ${gap >= 0 ? 'shorter' : 'longer'}. Descriptive, not causal.</p></div>`
+      : '') +
+    `<div><h4>Records</h4><p class="chart-note">${groups[0].n.toLocaleString()} records without an active meter nearby and ${groups[1].n.toLocaleString()} with one. Both need a start date, an end date and a known proximity value.</p></div>` +
+    '<div><h4>Reading it</h4><p class="chart-note">Records without coordinates have no proximity classification and are excluded rather than treated as unmetered. An empty group is left off the chart rather than drawn at zero.</p></div>';
   return {
     svg: bars(shown.map(i => labels[i]), shown.map(i => groups[i].median), 'Median project duration by active-meter proximity', 'Proximity group', 'Median duration (days)'),
+    wide: true,
+    side,
     note: 'Median duration among records with both dates and a known proximity value. Records without coordinates have no proximity classification and are excluded rather than treated as unmetered. An empty group is left off the chart rather than drawn at zero.',
     table: {
       caption: 'Records and median project duration by active-meter proximity.',

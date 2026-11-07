@@ -699,7 +699,7 @@ main { padding-bottom: 56px; }
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 24px;
   transition: opacity 140ms var(--ease-out);
 }
 
@@ -734,8 +734,12 @@ main { padding-bottom: 56px; }
   to { background-position: 0 50%; }
 }
 
+/* A flex column so the data-table rule can sit on the same baseline in every
+   card of a row, however many lines the note above it takes. */
 .chart-panel {
-  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
   border-top: 2px solid var(--rule);
   min-width: 0;
   position: relative;
@@ -854,9 +858,16 @@ main { padding-bottom: 56px; }
 }
 
 /* Focus + context: the hovered dot lifts while its 399 siblings fade. The
-   dimming rides fill-opacity, which the entrance keyframes never animate. */
+   dimming rides fill-opacity, which the entrance keyframes never animate.
+   The radius needs a unit: Chromium accepts the unitless 5.5, Firefox drops
+   the declaration, so the dot never grew there. The drop-shadow inks the
+   hovered mark without touching its 20-unit transparent hit ring. */
 .scatter:has(.dot:hover) .dot:not(:hover) { fill-opacity: .16; }
-.scatter .dot:hover { fill-opacity: 1; r: 5.5; }
+.scatter .dot:hover {
+  fill-opacity: 1;
+  r: 5.5px;
+  filter: drop-shadow(0 0 1.2px var(--ink));
+}
 
 /* The chart tooltip. Ink-on-ground inverts per theme, matching the signage. */
 .chart-tip {
@@ -958,11 +969,16 @@ main { padding-bottom: 56px; }
   text-wrap: pretty;
 }
 
-.wide-body { display: grid; gap: 20px; align-items: start; }
+.wide-body { display: grid; gap: 20px; align-items: stretch; }
 
 /* A square map at full panel width was the tallest object on the page â€” one
-   viewport for one of twelve charts. */
-.chart-panel--wide .chart { max-width: 640px; }
+   viewport for one of twelve charts. The wide column is capped so the side
+   text ends near the chart instead of floating above 300px of empty panel. */
+.chart-panel--wide .chart { max-width: 520px; }
+
+/* The chart keeps its own height; the side column stretches to the row so its
+   data-table rule closes the card on the same line as the chart's bottom. */
+.wide-body > .chart { align-self: start; }
 
 .wide-side { display: flex; flex-direction: column; gap: 14px; }
 
@@ -1011,7 +1027,7 @@ main { padding-bottom: 56px; }
 /* ---------- Chart data tables ---------- */
 
 .chart-data {
-  margin: 12px 0 0;
+  margin: auto 0 0;
   padding-top: 10px;
   border-top: 1px solid var(--hair);
 }
@@ -1715,7 +1731,7 @@ main { padding-bottom: 56px; }
     gap: 36px;
   }
 
-  .wide-body { grid-template-columns: minmax(0, 640px) minmax(0, 1fr); }
+  .wide-body { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); }
 }
 
 /* ---------- Footer ---------- */
