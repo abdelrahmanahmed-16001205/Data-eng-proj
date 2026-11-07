@@ -527,13 +527,17 @@ function q05(h) {
 }
 
 function q06(h) {
-  const grouped = group(h, 'cb_id');
+  /* The notebook's Q6 board summary (cell 37) counts new-construction records
+     only, so the board averages here must use the same population or the chart
+     and the story disagree. */
+  const newOnly = h.filter(r => /new/i.test(String(r.reporting_construction_type || '')));
+  const grouped = group(newOnly, 'cb_id');
   const rows = Object.entries(grouped).map(([cb, a]) => {
     const withProx = a.filter(r => N(r.meters_nearby) !== null);
     return {
       cb_id: cb,
       borough: a[0].borough,
-      new_units: a.reduce((v, r) => v + (N(r.reporting_construction_type === 'New Construction' ? r.all_counted_units : 0) || 0), 0),
+      new_units: a.reduce((v, r) => v + (N(r.all_counted_units) || 0), 0),
       avg: withProx.length ? withProx.map(r => N(r.meters_nearby)).reduce((x, y) => x + y, 0) / withProx.length : 0
     };
   }).sort((a, b) => b.new_units - a.new_units);
