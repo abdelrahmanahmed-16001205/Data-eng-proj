@@ -91,10 +91,10 @@ sensitivity check shows how much the result depends on it:
 Records without usable coordinates (1,958 housing records, 20.5%) are excluded from proximity shares,
 since a missing coordinate is not evidence of a missing meter. A housing row is a dataset record and may
 not be a unique physical building: 123 buildings appear in 247 records, and counting each repeated
-building once would remove 1,154 units (0.36% of the citywide total). Meter status and location describe
-the city on the snapshot date, and the file keeps no history, so a meter cannot be matched to the
-completion year of the housing beside it. A meter records paid parking equipment, not the number of
-spaces it serves.
+building once, using its first record, would remove 10,270 units (3.2% of the citywide
+total). Meter status and location describe the city on the snapshot date, and the file keeps no
+history, so a meter cannot be matched to the completion year of the housing beside it. A meter records
+paid parking equipment, not the number of spaces it serves.
 
 ---
 
@@ -188,7 +188,7 @@ If the repository is renamed or forked, update the canonical, Open Graph and foo
 | Ahmed Sayed | 16008533 | Q1: active meters per 1,000 affordable units by borough (bar). Q2: share of housing records near an active meter by completion year (line). | Housing dataset: missing values and duplicates | Aggregation of housing data | Dropdown filters |
 | Mohannad Hany | 16008825 | Q3: nearby active meters, new construction vs preservation (box). Q4: 3-bedroom-plus share vs nearby meters (scatter). | Transport dataset: missing values and duplicates | Aggregation of transport data | Search mode |
 | Abdelrahman Mohamed | 16001205 | Q5: income-band shares vs nearby meters (scatter). Q6: community-board new units vs average nearby meters (scatter). | Housing dataset: outliers (IQR + domain rules) | Merge and join-key justification | Generate report callback |
-| Mohamed Wael | 16003528 | Q7: housing and meter locations on one map. Q8: meter status mix near vs far from new housing (stacked bar). | Transport dataset: outliers (domain rules) | Post-integration cleaning | Chart layout and styling |
+| Mohamed Wael | 16003528 | Q7: housing and meter locations on one map. Q8: meter status mix near vs far from new housing (stacked bar). | Transport dataset: coordinate validity and time-limit rules | Post-integration cleaning | Chart layout and styling |
 | Kareem Ahmad Aly Mursy Ahmad Alguineedy | 16007546 | Q9: total housing units vs nearby active meters (scatter). Q10: meter time-limit groups by housing proximity (grouped bar). | Standardising dates, ZIPs and boroughs (both datasets) | EDA of the integrated data | Story section |
 | Deema Sameh Mahmoud Abdelwahed Seada | 16002455 | Q11: affordable-unit share vs nearby meters (scatter). Q12: project duration with and without a nearby meter (box). | Inconsistent categories and string cleaning | Feasibility check and notebook Markdown | Deployment, README, final testing |
 
