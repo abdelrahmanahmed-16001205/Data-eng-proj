@@ -183,7 +183,7 @@ function bars(labels, values, title, xlabel, ylabel, percent = false, selected =
     const on = selected !== null && String(l) === String(selected);
     s += `<g class="bar-col" style="--i:${i}" data-tip="${esc(l)}: ${esc(val)}">` +
       `<rect class="bar${on ? ' is-selected' : ''}" x="${x}" y="${303 - h}" width="${w}" height="${h}" rx="3"></rect>` +
-      `<text class="bar-value" x="${x + w / 2}" y="${303 - h - 7}" text-anchor="middle">${esc(val)}</text>` +
+      `<text class="bar-value" x="${x + w / 2}" y="${303 - h - 8}" text-anchor="middle">${esc(val)}</text>` +
       lines.map((v, j) => `<text class="tick" x="${x + w / 2}" y="${lines.length > 1 ? 313 + j * 14 : 319}" text-anchor="middle">${esc(cut(v))}</text>`).join('') +
       `</g>`;
   });

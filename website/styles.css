@@ -827,13 +827,18 @@ main { padding-bottom: 56px; }
 .axis { stroke: var(--axis); stroke-width: 1; }
 .gridline { stroke: var(--hair-pale); stroke-width: 1; }
 .tick, .axis-label { font: 14px var(--mono); fill: var(--note); }
-.bar { fill: var(--green); }
+.bar { fill: var(--green); transition: fill 120ms ease; }
+
+/* Hover response for the value tooltip to point at. The entrance animations
+   pin opacity and transform (fill-mode both), so the highlight works through
+   fill, fill-opacity and r — properties the keyframes never touch. */
+.bar:hover { fill: var(--green-deep); }
 
 /* The chart keeps all five boroughs when one is filtered; the outline marks
    the selection. A dimmed fill would fail the 3:1 non-text contrast floor. */
 .bar.is-selected { stroke: var(--ink); stroke-width: 2; }
 
-.bar-value { font: 500 11px var(--mono); fill: var(--note); }
+.bar-value { font: 500 13px var(--mono); fill: var(--note); }
 .dot { fill: var(--red); fill-opacity: .8; }
 .dot.secondary { fill: var(--green); }
 
@@ -845,7 +850,13 @@ main { padding-bottom: 56px; }
   pointer-events: all;
   stroke: transparent;
   stroke-width: 20;
+  transition: fill-opacity 120ms ease, r 120ms ease;
 }
+
+/* Focus + context: the hovered dot lifts while its 399 siblings fade. The
+   dimming rides fill-opacity, which the entrance keyframes never animate. */
+.scatter:has(.dot:hover) .dot:not(:hover) { fill-opacity: .16; }
+.scatter .dot:hover { fill-opacity: 1; r: 5.5; }
 
 /* The chart tooltip. Ink-on-ground inverts per theme, matching the signage. */
 .chart-tip {
@@ -873,7 +884,8 @@ main { padding-bottom: 56px; }
   stroke-width: 3.5px;
   stroke-linejoin: round;
 }
-.heat-cell { stroke: var(--hair); stroke-width: 1; }
+.heat-cell { stroke: var(--hair); stroke-width: 1; transition: stroke 120ms ease, stroke-width 120ms ease; }
+.heat-cell:hover { stroke: var(--ink); stroke-width: 1.6; }
 .heat-label { font: 500 12px var(--mono); text-anchor: middle; pointer-events: none; }
 .heat-head { font: 500 12px var(--mono); fill: var(--note); text-anchor: middle; }
 .heat-row { font: 500 12px var(--mono); fill: var(--note); }
