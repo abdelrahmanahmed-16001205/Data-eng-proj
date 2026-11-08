@@ -189,8 +189,8 @@ If the repository is renamed or forked, update the canonical, Open Graph and foo
 | Mohannad Hany | 16008825 | Q3: nearby active meters, new construction vs preservation (box). Q4: 3-bedroom-plus share vs nearby meters (scatter). | Transport dataset: missing values and duplicates | Aggregation of transport data | Search mode |
 | Abdelrahman Mohamed | 16001205 | Q5: income-band shares vs nearby meters (scatter). Q6: community-board new units vs average nearby meters (scatter). | Housing dataset: outliers (IQR + domain rules) | Merge and join-key justification | Generate report callback |
 | Mohamed Wael | 16003528 | Q7: housing and meter locations on one map. Q8: meter status mix near vs far from new housing (stacked bar). | Transport dataset: coordinate validity and time-limit rules | Post-integration cleaning | Chart layout and styling |
-| Kareem Ahmad Aly Mursy Ahmad Alguineedy | 16007546 | Q9: total housing units vs nearby active meters (scatter). Q10: meter time-limit groups by housing proximity (grouped bar). | Standardising dates, ZIPs and boroughs (both datasets) | EDA of the integrated data | Story section |
-| Deema Sameh Mahmoud Abdelwahed Seada | 16002455 | Q11: affordable-unit share vs nearby meters (scatter). Q12: project duration with and without a nearby meter (box). | Inconsistent categories and string cleaning | Feasibility check and notebook Markdown | Deployment, README, final testing |
+| Kareem Mursy | 16007546 | Q9: total housing units vs nearby active meters (scatter). Q10: meter time-limit groups by housing proximity (grouped bar). | Standardising dates, ZIPs and boroughs (both datasets) | EDA of the integrated data | Story section |
+| Deema Sameh | 16002455 | Q11: affordable-unit share vs nearby meters (scatter). Q12: project duration with and without a nearby meter (box). | Inconsistent categories and string cleaning | Feasibility check and notebook Markdown | Deployment, README, final testing |
 
 ---
 

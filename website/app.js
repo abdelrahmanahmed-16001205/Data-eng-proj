@@ -24,8 +24,8 @@ const authors = [
   'Mohannad Hany', 'Mohannad Hany',
   'Abdelrahman Mohamed', 'Abdelrahman Mohamed',
   'Mohamed Wael', 'Mohamed Wael',
-  'Kareem Ahmad Aly Mursy Ahmad Alguineedy', 'Kareem Ahmad Aly Mursy Ahmad Alguineedy',
-  'Deema Sameh Mahmoud Abdelwahed Seada', 'Deema Sameh Mahmoud Abdelwahed Seada'
+  'Kareem Mursy', 'Kareem Mursy',
+  'Deema Sameh', 'Deema Sameh'
 ];
 
 const files = ['borough_summary', 'community_board_summary', 'year_summary', 'buildings_integrated', 'meters_integrated'];
@@ -626,7 +626,11 @@ function q10(h, m) {
   const grouped = {};
   let skipped = 0;
   m.forEach(r => {
-    if (!r.time_limit_group) { skipped++; return; }
+    /* A meter without usable coordinates has no proximity class; counting it
+       as "far" would diverge from the notebook's Q10. None exist in this
+       snapshot, so the guard changes nothing today — it only holds if the
+       data is ever refreshed. */
+    if (!r.time_limit_group || N(r.near_housing) === null) { skipped++; return; }
     const k = `${r.time_limit_group.replace(/\s*\(all day\)/, '')} · ${N(r.near_housing) > 0 ? 'near' : 'far'}`;
     grouped[k] = (grouped[k] || 0) + 1;
   });
